@@ -20,6 +20,13 @@ describe('createDraftFromTool', () => {
     const d = createDraftFromTool('circle', { x: 0, y: 0 })
     expect(d?.kind).toBe('ellipse')
   })
+
+  it('maps triangle and kite tools to box drafts', () => {
+    expect(createDraftFromTool('triangle', { x: 1, y: 2 })?.kind).toBe(
+      'triangle',
+    )
+    expect(createDraftFromTool('kite', { x: 1, y: 2 })?.kind).toBe('kite')
+  })
 })
 
 describe('mergeDraftWithPoint', () => {
@@ -57,6 +64,10 @@ describe('commitDraft', () => {
       stroke: '#000',
       newId: ids(),
       minShapePx: MIN_SHAPE_PX,
+      stickyFill: '#fef08a',
+      stickyTextColor: '#422006',
+      shapeFill: '#2962ff',
+      shapeFillOpacity: 0.15,
     })
     expect(shape).toBeNull()
   })
@@ -73,11 +84,17 @@ describe('commitDraft', () => {
       stroke: '#2962ff',
       newId: ids(),
       minShapePx: MIN_SHAPE_PX,
+      stickyFill: '#fef08a',
+      stickyTextColor: '#422006',
+      shapeFill: '#2962ff',
+      shapeFillOpacity: 0.15,
     })
     expect(shape?.kind).toBe('rect')
     if (shape?.kind === 'rect') {
       expect(shape.width).toBe(10)
       expect(shape.height).toBe(10)
+      expect(shape.fill).toBe('#2962ff')
+      expect(shape.fillOpacity).toBe(0.15)
     }
   })
 
@@ -93,7 +110,50 @@ describe('commitDraft', () => {
       stroke: '#2962ff',
       newId: ids(),
       minShapePx: MIN_SHAPE_PX,
+      stickyFill: '#fef08a',
+      stickyTextColor: '#422006',
+      shapeFill: '#2962ff',
+      shapeFillOpacity: 0.15,
     })
     expect(shape).toBeNull()
+  })
+
+  it('commits triangle and kite when large enough', () => {
+    const box = {
+      x1: 0,
+      y1: 0,
+      x2: 20,
+      y2: 20,
+    }
+    const tri = commitDraft(
+      { kind: 'triangle', ...box },
+      {
+        stroke: '#2962ff',
+        newId: ids(),
+        minShapePx: MIN_SHAPE_PX,
+        stickyFill: '#fef08a',
+        stickyTextColor: '#422006',
+        shapeFill: '#2962ff',
+        shapeFillOpacity: 0.15,
+      },
+    )
+    expect(tri?.kind).toBe('triangle')
+    if (tri?.kind === 'triangle') {
+      expect(tri.width).toBe(20)
+      expect(tri.height).toBe(20)
+    }
+    const kite = commitDraft(
+      { kind: 'kite', ...box },
+      {
+        stroke: '#2962ff',
+        newId: ids(),
+        minShapePx: MIN_SHAPE_PX,
+        stickyFill: '#fef08a',
+        stickyTextColor: '#422006',
+        shapeFill: '#2962ff',
+        shapeFillOpacity: 0.15,
+      },
+    )
+    expect(kite?.kind).toBe('kite')
   })
 })

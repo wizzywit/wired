@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CanvasTool } from '../../context/canvasTypes'
+import { STICKY_COLOR_PRESETS } from '../../context/canvasTypes'
 import { useCanvasOptional } from '../../context/CanvasContext'
 import { Icon } from '../ui/Icon'
 
@@ -14,7 +15,7 @@ const dashboardTools: { icon: string; label: string; active?: boolean }[] = [
 
 type ShapeTool = Extract<
   CanvasTool,
-  'rect' | 'circle' | 'line' | 'arrow'
+  'rect' | 'circle' | 'triangle' | 'kite' | 'line' | 'arrow'
 >
 
 const SHAPE_OPTIONS: {
@@ -24,12 +25,21 @@ const SHAPE_OPTIONS: {
 }[] = [
   { tool: 'rect', icon: 'crop_square', label: 'Rect' },
   { tool: 'circle', icon: 'circle', label: 'Circle' },
+  { tool: 'triangle', icon: 'change_history', label: 'Triangle' },
+  { tool: 'kite', icon: 'diamond', label: 'Kite' },
   { tool: 'line', icon: 'horizontal_rule', label: 'Line' },
   { tool: 'arrow', icon: 'north_east', label: 'Arrow' },
 ]
 
 function isShapeTool(t: CanvasTool): t is ShapeTool {
-  return t === 'rect' || t === 'circle' || t === 'line' || t === 'arrow'
+  return (
+    t === 'rect' ||
+    t === 'circle' ||
+    t === 'triangle' ||
+    t === 'kite' ||
+    t === 'line' ||
+    t === 'arrow'
+  )
 }
 
 function shapeButtonIcon(tool: CanvasTool): string {
@@ -174,6 +184,146 @@ function CanvasShapesFlyout({ tool, setTool }: CanvasShapesFlyoutProps) {
   )
 }
 
+type CanvasStickyFlyoutProps = {
+  tool: CanvasTool
+  setTool: (t: CanvasTool) => void
+  stickyFill: string
+  setStickyPreset: (fill: string, textColor: string) => void
+}
+
+function CanvasStickyFlyout({
+  tool,
+  setTool,
+  stickyFill,
+  setStickyPreset,
+}: CanvasStickyFlyoutProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleClose = useCallback(() => {
+    clearCloseTimer()
+    closeTimerRef.current = setTimeout(() => {
+      setMenuOpen(false)
+      closeTimerRef.current = null
+    }, 200)
+  }, [clearCloseTimer])
+
+  const openMenu = useCallback(() => {
+    clearCloseTimer()
+    setMenuOpen(true)
+  }, [clearCloseTimer])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDocDown = (e: MouseEvent) => {
+      if (wrapRef.current?.contains(e.target as Node)) return
+      setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDocDown)
+    return () => document.removeEventListener('mousedown', onDocDown)
+  }, [menuOpen])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
+
+  const stickyActive = tool === 'sticky'
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative z-50 flex flex-row items-start gap-1"
+      onMouseEnter={openMenu}
+      onMouseLeave={scheduleClose}
+    >
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        onClick={() => {
+          clearCloseTimer()
+          setMenuOpen((o) => !o)
+        }}
+        className={
+          stickyActive
+            ? 'group flex flex-col items-center gap-1 active:scale-90'
+            : 'group flex flex-col items-center gap-1 text-slate-400 transition-all hover:text-blue-500 active:scale-90 dark:text-slate-500 dark:hover:text-blue-300'
+        }
+      >
+        {stickyActive ? (
+          <>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+              <Icon name="sticky_note_2" size="sm" />
+            </div>
+            <span className="font-sans text-[10px] font-bold uppercase tracking-widest text-blue-600">
+              Sticky
+            </span>
+          </>
+        ) : (
+          <>
+            <Icon name="sticky_note_2" size="sm" />
+            <span className="font-sans text-[10px] font-bold uppercase tracking-widest">
+              Sticky
+            </span>
+          </>
+        )}
+      </button>
+
+      {menuOpen ? (
+        <div
+          role="menu"
+          aria-label="Sticky colors"
+          className="absolute left-full top-0 z-50 ml-1 flex min-w-[8rem] flex-col gap-1 rounded-2xl border border-slate-200/90 bg-white/95 py-1.5 pl-1.5 pr-2 shadow-lg backdrop-blur-xl dark:border-slate-600 dark:bg-slate-900/95"
+        >
+          {STICKY_COLOR_PRESETS.map((opt) => {
+            const selected = tool === 'sticky' && stickyFill === opt.fill
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setStickyPreset(opt.fill, opt.textColor)
+                  setTool('sticky')
+                  clearCloseTimer()
+                  setMenuOpen(false)
+                }}
+                className={
+                  selected
+                    ? 'flex items-center gap-2 rounded-xl bg-blue-600/10 px-2 py-1.5 text-left text-blue-600 dark:bg-blue-500/20 dark:text-blue-300'
+                    : 'flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                }
+              >
+                <span
+                  className="h-5 w-5 shrink-0 rounded-md border border-slate-300 dark:border-slate-600"
+                  style={{ backgroundColor: opt.fill }}
+                  title={opt.label}
+                />
+                <span className="font-sans text-[11px] font-bold uppercase tracking-wide">
+                  {opt.label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 type FloatingToolbarProps = {
   /** Canvas variant shows tool labels and wires drawing tools */
   variant?: 'dashboard' | 'canvas'
@@ -250,24 +400,52 @@ export function FloatingToolbar({
 
           <CanvasShapesFlyout tool={canvas.tool} setTool={canvas.setTool} />
 
-          {(
-            [
-              { icon: 'title', label: 'Text' },
-              { icon: 'sticky_note_2', label: 'Sticky' },
-              { icon: 'gesture', label: 'Lasso' },
-            ] as const
-          ).map((t) => (
-            <button
-              key={t.icon}
-              type="button"
-              className="group flex flex-col items-center gap-1 text-slate-400 transition-all hover:text-blue-500 active:scale-90 dark:text-slate-500 dark:hover:text-blue-300"
-            >
-              <Icon name={t.icon} size="sm" />
-              <span className="font-sans text-[10px] font-bold uppercase tracking-widest">
-                {t.label}
-              </span>
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => canvas.setTool('text')}
+            className={
+              canvas.tool === 'text'
+                ? 'group flex flex-col items-center gap-1 active:scale-90'
+                : 'group flex flex-col items-center gap-1 text-slate-400 transition-all hover:text-blue-500 active:scale-90 dark:text-slate-500 dark:hover:text-blue-300'
+            }
+          >
+            {canvas.tool === 'text' ? (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+                  <Icon name="title" size="sm" />
+                </div>
+                <span className="font-sans text-[10px] font-bold uppercase tracking-widest text-blue-600">
+                  Text
+                </span>
+              </>
+            ) : (
+              <>
+                <Icon name="title" size="sm" />
+                <span className="font-sans text-[10px] font-bold uppercase tracking-widest">
+                  Text
+                </span>
+              </>
+            )}
+          </button>
+
+          <CanvasStickyFlyout
+            tool={canvas.tool}
+            setTool={canvas.setTool}
+            stickyFill={canvas.stickyColor}
+            setStickyPreset={canvas.setStickyPreset}
+          />
+
+          <button
+            type="button"
+            disabled
+            title="Coming soon"
+            className="flex cursor-not-allowed flex-col items-center gap-1 text-slate-300 opacity-50 dark:text-slate-600"
+          >
+            <Icon name="gesture" size="sm" />
+            <span className="font-sans text-[10px] font-bold uppercase tracking-widest">
+              Lasso
+            </span>
+          </button>
         </div>
         <div className="mt-4 flex flex-col gap-4 border-t border-slate-100 pt-4 dark:border-slate-700">
           <button

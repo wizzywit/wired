@@ -23,6 +23,16 @@ type UseCanvasDrawingDeps = {
     clientY: number,
   ) => { x: number; y: number } | null
   spaceDown: boolean
+  textFill: string
+  stickyFill: string
+  stickyTextColor: string
+  /** Default fill (hex) for new rect / ellipse */
+  shapeFill: string
+  /** Default fill opacity for new rect / ellipse */
+  shapeFillOpacity: number
+  onTextShapeCreated?: (id: string) => void
+  /** After drag-draw commit (rect, ellipse, pen, line, arrow, sticky) */
+  onShapeCommitted?: (id: string) => void
 }
 
 /**
@@ -34,6 +44,13 @@ export function useCanvasDrawing({
   screenToWorld,
   clientToWorld,
   spaceDown,
+  textFill,
+  stickyFill,
+  stickyTextColor,
+  shapeFill,
+  shapeFillOpacity,
+  onTextShapeCreated,
+  onShapeCommitted,
 }: UseCanvasDrawingDeps) {
   const drawingRef = useRef(false)
   const draftRef = useRef<Draft | null>(null)
@@ -48,7 +65,7 @@ export function useCanvasDrawing({
   }, [])
 
   const attachDrawingListeners = useCallback(
-    (stroke: string) => {
+    () => {
       drawingCleanupRef.current?.()
 
       const onMove = (e: MouseEvent) => {
@@ -84,11 +101,18 @@ export function useCanvasDrawing({
         draftRef.current = null
         if (d) {
           const shape = commitDraft(d, {
-            stroke,
+            stroke: DEFAULT_STROKE,
             newId,
             minShapePx: MIN_SHAPE_PX,
+            stickyFill,
+            stickyTextColor,
+            shapeFill,
+            shapeFillOpacity,
           })
-          if (shape) addShape(shape)
+          if (shape) {
+            addShape(shape)
+            onShapeCommitted?.(shape.id)
+          }
         }
         setDraft(null)
         drawingRef.current = false
@@ -100,7 +124,15 @@ export function useCanvasDrawing({
       window.addEventListener('keydown', onKey)
       drawingCleanupRef.current = teardown
     },
-    [addShape, clientToWorld],
+    [
+      addShape,
+      clientToWorld,
+      stickyFill,
+      stickyTextColor,
+      shapeFill,
+      shapeFillOpacity,
+      onShapeCommitted,
+    ],
   )
 
   const handleDrawMouseDown = useCallback(
@@ -112,15 +144,43 @@ export function useCanvasDrawing({
       const p = stage.getPointerPosition()
       if (!p) return false
       const w = screenToWorld(p.x, p.y)
+
+      if (tool === 'text') {
+        const id = newId()
+        addShape({
+          id,
+          kind: 'text',
+          x: w.x,
+          y: w.y,
+          text: '',
+          fontSize: 15,
+          fill: textFill,
+          width: 260,
+          fontFamily: 'Inter, sans-serif',
+          fontStyle: 'normal',
+          align: 'left',
+        })
+        onTextShapeCreated?.(id)
+        return true
+      }
+
       const created = createDraftFromTool(tool, w)
       if (!created) return false
       drawingRef.current = true
       draftRef.current = created
       setDraft(created)
-      attachDrawingListeners(DEFAULT_STROKE)
+      attachDrawingListeners()
       return true
     },
-    [tool, spaceDown, screenToWorld, attachDrawingListeners],
+    [
+      tool,
+      spaceDown,
+      screenToWorld,
+      addShape,
+      attachDrawingListeners,
+      textFill,
+      onTextShapeCreated,
+    ],
   )
 
   return {

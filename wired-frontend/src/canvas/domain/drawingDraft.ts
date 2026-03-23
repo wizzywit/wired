@@ -4,7 +4,10 @@ import { PEN_STROKE_WIDTH, STROKE_WIDTH } from './canvasConfig'
 export type Draft =
   | { kind: 'pen'; points: number[] }
   | { kind: 'rect'; x1: number; y1: number; x2: number; y2: number }
+  | { kind: 'sticky'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'ellipse'; x1: number; y1: number; x2: number; y2: number }
+  | { kind: 'triangle'; x1: number; y1: number; x2: number; y2: number }
+  | { kind: 'kite'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'arrow'; x1: number; y1: number; x2: number; y2: number }
 
@@ -24,9 +27,36 @@ export function createDraftFromTool(
       y2: w.y,
     }
   }
+  if (tool === 'sticky') {
+    return {
+      kind: 'sticky',
+      x1: w.x,
+      y1: w.y,
+      x2: w.x,
+      y2: w.y,
+    }
+  }
   if (tool === 'circle') {
     return {
       kind: 'ellipse',
+      x1: w.x,
+      y1: w.y,
+      x2: w.x,
+      y2: w.y,
+    }
+  }
+  if (tool === 'triangle') {
+    return {
+      kind: 'triangle',
+      x1: w.x,
+      y1: w.y,
+      x2: w.x,
+      y2: w.y,
+    }
+  }
+  if (tool === 'kite') {
+    return {
+      kind: 'kite',
       x1: w.x,
       y1: w.y,
       x2: w.x,
@@ -75,10 +105,24 @@ export type CommitDeps = {
   stroke: string
   newId: () => string
   minShapePx: number
+  stickyFill: string
+  stickyTextColor: string
+  /** Default fill for new rect / ellipse (hex) */
+  shapeFill: string
+  /** Default fill opacity for new rect / ellipse */
+  shapeFillOpacity: number
 }
 
 export function commitDraft(d: Draft, deps: CommitDeps): DrawShape | null {
-  const { stroke, newId, minShapePx } = deps
+  const {
+    stroke,
+    newId,
+    minShapePx,
+    stickyFill,
+    stickyTextColor,
+    shapeFill,
+    shapeFillOpacity,
+  } = deps
   const sw = STROKE_WIDTH
 
   if (d.kind === 'pen') {
@@ -106,6 +150,50 @@ export function commitDraft(d: Draft, deps: CommitDeps): DrawShape | null {
       height: h,
       stroke,
       strokeWidth: sw,
+      fill: shapeFill,
+      fillOpacity: shapeFillOpacity,
+    }
+  }
+  if (d.kind === 'triangle' || d.kind === 'kite') {
+    const x = Math.min(d.x1, d.x2)
+    const y = Math.min(d.y1, d.y2)
+    const w = Math.abs(d.x2 - d.x1)
+    const h = Math.abs(d.y2 - d.y1)
+    if (w < minShapePx || h < minShapePx) return null
+    return {
+      id: newId(),
+      kind: d.kind === 'triangle' ? 'triangle' : 'kite',
+      x,
+      y,
+      width: w,
+      height: h,
+      stroke,
+      strokeWidth: sw,
+      fill: shapeFill,
+      fillOpacity: shapeFillOpacity,
+    }
+  }
+  if (d.kind === 'sticky') {
+    const x = Math.min(d.x1, d.x2)
+    const y = Math.min(d.y1, d.y2)
+    const w = Math.abs(d.x2 - d.x1)
+    const h = Math.abs(d.y2 - d.y1)
+    if (w < minShapePx || h < minShapePx) return null
+    return {
+      id: newId(),
+      kind: 'sticky',
+      x,
+      y,
+      width: w,
+      height: h,
+      text: 'Note',
+      fill: stickyFill,
+      textColor: stickyTextColor,
+      fillOpacity: 1,
+      fontSize: 13,
+      fontFamily: 'Inter, sans-serif',
+      fontStyle: 'normal',
+      align: 'left',
     }
   }
   if (d.kind === 'ellipse') {
@@ -123,6 +211,8 @@ export function commitDraft(d: Draft, deps: CommitDeps): DrawShape | null {
       ry,
       stroke,
       strokeWidth: sw,
+      fill: shapeFill,
+      fillOpacity: shapeFillOpacity,
     }
   }
   if (d.kind === 'line' || d.kind === 'arrow') {

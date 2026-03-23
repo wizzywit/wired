@@ -10,6 +10,7 @@ import {
   zoomWheelAtPointer,
 } from '../domain/viewport'
 import type { Viewport } from '../domain/viewport'
+import { isTypingTarget } from '../domain/domFocus'
 
 type PanRef = {
   active: boolean
@@ -46,18 +47,18 @@ export function useCanvasViewport(
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault()
-        setSpaceDown(true)
-      }
+      if (e.code !== 'Space') return
+      if (isTypingTarget(e.target)) return
+      e.preventDefault()
+      setSpaceDown(true)
     }
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault()
-        setSpaceDown(false)
-        panRef.current.active = false
-        setIsPanning(false)
-      }
+      if (e.code !== 'Space') return
+      if (isTypingTarget(e.target)) return
+      e.preventDefault()
+      setSpaceDown(false)
+      panRef.current.active = false
+      setIsPanning(false)
     }
     window.addEventListener('keydown', onKeyDown, { capture: true })
     window.addEventListener('keyup', onKeyUp, { capture: true })
@@ -163,6 +164,7 @@ export function useCanvasViewport(
     viewport,
     spaceDown,
     isPanning,
+    panRef,
     screenToWorld,
     clientToWorld,
     handleWheel,

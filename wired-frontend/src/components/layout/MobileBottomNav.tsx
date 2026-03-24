@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Icon } from '../ui/Icon'
+import { Icon } from '../common/Icon'
 
 export function MobileBottomNav() {
   return (

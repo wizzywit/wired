@@ -1,8 +1,8 @@
 import { AppTopNav } from '../components/layout/AppTopNav'
 import { FloatingToolbar } from '../components/layout/FloatingToolbar'
 import { MobileBottomNav } from '../components/layout/MobileBottomNav'
-import { Icon } from '../components/ui/Icon'
-import { SearchField } from '../components/ui/SearchField'
+import { Icon } from '../components/common/Icon'
+import { SearchField } from '../components/common/SearchField'
 
 const recent = [
   { title: 'Q4 Strategy Roadmap', when: 'Edited 2h ago' },

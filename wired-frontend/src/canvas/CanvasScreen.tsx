@@ -1,8 +1,8 @@
-import { KonvaCanvas } from '../components/canvas/KonvaCanvas'
 import { AppTopNav } from '../components/layout/AppTopNav'
 import { FloatingToolbar } from '../components/layout/FloatingToolbar'
-import { Icon } from '../components/ui/Icon'
-import { CanvasProvider, useCanvas } from '../context/CanvasContext'
+import { Icon } from '../components/common/Icon'
+import { KonvaCanvas, useCanvasStore } from '../components/canvas'
+import { useCollaboration } from './useCollaboration'
 
 const avatars = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
@@ -11,12 +11,23 @@ const avatars = [
 ]
 
 function CanvasScreenInner() {
-  const { undo, redo, canUndo, canRedo } = useCanvas()
+  const undo = useCanvasStore((state) => state.undo)
+  const redo = useCanvasStore((state) => state.redo)
+  const canUndo = useCanvasStore((state) => state.history.past.length > 0)
+  const canRedo = useCanvasStore((state) => state.history.future.length > 0)
+  const shapes = useCanvasStore((state) => state.history.present)
+  const replaceShapes = useCanvasStore((state) => state.replaceShapes)
+  const applyRemotePatch = useCanvasStore((state) => state.applyRemotePatch)
+  const { roomId, usersOnline, isSynced } = useCollaboration(
+    shapes,
+    replaceShapes,
+    applyRemotePatch,
+  )
 
   return (
     <div className="h-dvh overflow-hidden bg-background font-body text-on-background">
       <AppTopNav
-        breadcrumb="Q4 Strategy Session"
+        breadcrumb={`Q4 Strategy Session • ${roomId}`}
         presence={
           <div className="mr-2 hidden -space-x-2 sm:flex">
             {avatars.map((src, i) => (
@@ -29,7 +40,7 @@ function CanvasScreenInner() {
               </div>
             ))}
             <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-surface-container-high text-[10px] font-bold text-on-surface-variant dark:border-slate-800">
-              +2
+              {Math.max(0, usersOnline - avatars.length)}
             </div>
           </div>
         }
@@ -42,6 +53,10 @@ function CanvasScreenInner() {
       </main>
 
       <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-white/85 p-1.5 shadow-lg backdrop-blur-xl dark:bg-slate-900/85">
+        <div className="px-2 text-[9px] font-bold uppercase tracking-tighter text-slate-500">
+          {isSynced ? `${usersOnline} online` : 'syncing...'}
+        </div>
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-600" />
         <button
           type="button"
           className="flex flex-col items-center text-slate-400 enabled:hover:text-blue-500 disabled:opacity-30"
@@ -67,9 +82,5 @@ function CanvasScreenInner() {
 }
 
 export function CanvasScreen() {
-  return (
-    <CanvasProvider>
-      <CanvasScreenInner />
-    </CanvasProvider>
-  )
+  return <CanvasScreenInner />
 }

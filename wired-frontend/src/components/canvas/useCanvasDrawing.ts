@@ -3,16 +3,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CanvasTool, DrawShape } from '../../context/canvasTypes'
 import { newId } from '../../context/canvasTypes'
 import {
-  DEFAULT_STROKE,
-  MIN_SHAPE_PX,
-  PEN_MIN_DIST,
-} from '../domain/canvasConfig'
-import {
   commitDraft,
   createDraftFromTool,
+  DEFAULT_STROKE,
   mergeDraftWithPoint,
+  MIN_SHAPE_PX,
+  PEN_MIN_DIST,
   type Draft,
-} from '../domain/drawingDraft'
+} from './utils'
 
 type UseCanvasDrawingDeps = {
   tool: CanvasTool

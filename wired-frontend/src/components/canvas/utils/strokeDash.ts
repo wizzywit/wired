@@ -1,4 +1,4 @@
-import type { StrokeDashPreset } from '../../context/canvasTypes'
+import type { StrokeDashPreset } from '../../../context/canvasTypes'
 
 /** Maps preset + stroke width to Konva `dash` array (undefined = solid). */
 export function dashToKonva(

@@ -1,5 +1,5 @@
-import type { Viewport } from '../domain/viewport'
-import { screenPointToWorld } from '../domain/viewport'
+import type { Viewport } from './viewport'
+import { screenPointToWorld } from './viewport'
 
 /** Maps DOM client coordinates → world space using the stage container’s bounding rect. */
 export function clientToWorldFromStage(

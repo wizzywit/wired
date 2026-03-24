@@ -2,15 +2,15 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import type { Stage as KonvaStage } from 'konva/lib/Stage'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
-import { clientToWorldFromStage } from '../adapters/stagePointer'
 import {
   applyPanDelta,
+  clientToWorldFromStage,
+  isTypingTarget,
   screenPointToWorld,
   zoomAtCenter,
   zoomWheelAtPointer,
-} from '../domain/viewport'
-import type { Viewport } from '../domain/viewport'
-import { isTypingTarget } from '../domain/domFocus'
+  type Viewport,
+} from './utils'
 
 type PanRef = {
   active: boolean

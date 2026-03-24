@@ -8,16 +8,18 @@ import {
 import type Konva from 'konva'
 import type { Stage as KonvaStage } from 'konva/lib/Stage'
 import type { RefObject } from 'react'
-import type { DrawShape } from '../../context/canvasTypes'
-import { screenBoxForNode } from '../adapters/screenBoxForNode'
-import { TRANSFORMER_TOOLBAR_CLEARANCE_PX } from '../domain/canvasConfig'
-import { clamp01, hexToRgba, toHex6 } from '../domain/colorUi'
+import type { DrawShape } from '../../../context/canvasTypes'
 import {
+  TRANSFORMER_TOOLBAR_CLEARANCE_PX,
+  clamp01,
   combineFontStyle,
+  hexToRgba,
   parseFontStyle,
+  screenBoxForNode,
   TEXT_FONT_OPTIONS,
+  toHex6,
   type TextAlignOption,
-} from '../domain/textFormatting'
+} from '../utils'
 
 type EditableShape = Extract<DrawShape, { kind: 'text' } | { kind: 'sticky' }>
 

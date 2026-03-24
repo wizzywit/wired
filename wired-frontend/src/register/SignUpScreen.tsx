@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Icon } from '../components/ui/Icon'
+import { Link, useNavigate } from 'react-router-dom'
+import { Icon } from '../components/common/Icon'
+import { useRegisterMutation } from '../service'
 
 const heroImg =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBG2ZLw2OTtfYozzgAMkZIt73sdz5Bk7Xg7rI6S0PxnYW6BN66g5aDLrm9r9BP6IlQxKbZp1WrD6P2FpKjFgK3KkgInez6Dzep41cPEZP4CsFuR-HhMsiTWiMyJoBstGedIC6F-leDt-KuiyAwv00xbvaEM2Luq5AOuG5lVR-a2HNauHAyvU8Rm_CDwJaCtrey2nsrpP1P69BNV39SD-tPrKq7w7ddBbDwYCAlO1PXrgAnLMv6ChcJ40oGZkQvisvYCGM8q9ukChDnx'
@@ -9,10 +10,31 @@ const googleLogo =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBjDyB8yAOaqguLk8nNFtesr34AqArR-dEmWyBrLaei_1EkT7JbMrmVkHkRM0FGZz8sbjz50pTtJjz5SnObl5kDBn_gkTLUkaFs8ewZqgzIF0aFID4fHhOX3-y67im2M7uqHZA9PhFye99Mz42VyAT_HP3tx_24UDbPMdvbulTPBQuvQW9CuZobU54iOr7NNQ1-taoPLstxWv_5g-QkFNvlyYp0OKmyduiWQ3HpIQ3DsyBiXUYrU03sn_D6aWRMZjmvTVQ9Urynu-iq'
 
 export function SignUpScreen() {
+  const navigate = useNavigate()
   const [showPw, setShowPw] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const registerMutation = useRegisterMutation()
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+    const displayName = String(formData.get('full_name') ?? '').trim()
+    const email = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+
+    try {
+      await registerMutation.mutateAsync({
+        email,
+        password,
+        displayName: displayName || undefined,
+      })
+      navigate('/canvas')
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Unable to create account right now.',
+      )
+    }
   }
 
   return (
@@ -141,10 +163,14 @@ export function SignUpScreen() {
 
               <button
                 type="submit"
+                disabled={registerMutation.isPending}
                 className="editorial-gradient w-full rounded-md py-4 font-headline font-bold text-white shadow-[0_20px_40px_rgba(0,67,200,0.15)] transition-opacity duration-300 hover:opacity-90"
               >
-                Get Started
+                {registerMutation.isPending ? 'Creating account...' : 'Get Started'}
               </button>
+              {error ? (
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              ) : null}
             </form>
 
             <div className="space-y-6">

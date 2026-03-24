@@ -2,19 +2,18 @@ import type Konva from 'konva'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Stage as KonvaStage } from 'konva/lib/Stage'
 import type { RefObject } from 'react'
-import type { DrawShape, StrokeDashPreset } from '../../context/canvasTypes'
+import type { DrawShape, StrokeDashPreset } from '../../../context/canvasTypes'
 import {
   STROKE_WIDTH_MAX,
   STROKE_WIDTH_MIN,
   TRANSFORMER_TOOLBAR_CLEARANCE_PX,
-} from '../domain/canvasConfig'
-import { clamp01, toHex6 } from '../domain/colorUi'
-import {
+  clamp01,
   clampToolbarAnchor,
   rectsIntersectScreen,
   SELECTION_TOOLBAR_LINE_GAP_PX,
   selectionToolbarGapPx,
-} from '../domain/selectionToolbarPosition'
+  toHex6,
+} from '../utils'
 
 type CanvasSelectionStyleBarProps = {
   selectedId: string | null

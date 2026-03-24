@@ -1,4 +1,4 @@
-import type { DrawShape } from '../../context/canvasTypes'
+import type { DrawShape } from '../../../context/canvasTypes'
 
 /** Normalize Konva transform into model state (scale baked into geometry). */
 export function rectFromTransformedNode(

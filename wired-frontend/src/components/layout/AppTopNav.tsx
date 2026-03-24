@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Button } from '../ui/Button'
-import { Icon } from '../ui/Icon'
+import { Button } from '../common/Button'
+import { Icon } from '../common/Icon'
 import { useTheme } from '../../context/ThemeContext'
 
 type AppTopNavProps = {

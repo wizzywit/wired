@@ -1,4 +1,4 @@
-import { Icon } from '../../components/ui/Icon'
+import { Icon } from '../../common/Icon'
 
 type CanvasZoomHudProps = {
   zoomPercent: number

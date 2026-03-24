@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { clientToWorldFromStage } from './stagePointer'
-import type { Viewport } from '../domain/viewport'
-import { screenPointToWorld } from '../domain/viewport'
+import {
+  clientToWorldFromStage,
+  screenPointToWorld,
+  type Viewport,
+} from '.'
 
 describe('clientToWorldFromStage', () => {
   it('returns null when container is missing', () => {

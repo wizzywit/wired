@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Icon } from '../components/ui/Icon'
+import { Icon } from '../components/common/Icon'
 import { useTheme } from '../context/ThemeContext'
 
 const heroImg =

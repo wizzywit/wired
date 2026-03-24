@@ -9,10 +9,8 @@ import {
   Rect,
   Text,
 } from 'react-konva'
-import type { DrawShape } from '../../context/canvasTypes'
-import { resolveKonvaFill } from '../domain/colorUi'
-import type { Draft } from '../domain/drawingDraft'
-import { dashToKonva } from '../domain/strokeDash'
+import type { DrawShape } from '../../../context/canvasTypes'
+import { dashToKonva, resolveKonvaFill, type Draft } from '../utils'
 
 function trianglePoints(w: number, h: number) {
   return [w / 2, 0, w, h, 0, h]

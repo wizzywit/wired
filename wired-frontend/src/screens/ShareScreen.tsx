@@ -1,6 +1,6 @@
 import { AppTopNav } from '../components/layout/AppTopNav'
 import { FloatingToolbar } from '../components/layout/FloatingToolbar'
-import { Icon } from '../components/ui/Icon'
+import { Icon } from '../components/common/Icon'
 
 export function ShareScreen() {
   return (

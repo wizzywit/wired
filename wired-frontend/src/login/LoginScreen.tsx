@@ -1,13 +1,29 @@
-import { type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { Icon } from '../components/ui/Icon'
+import { type FormEvent, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Icon } from '../components/common/Icon'
+import { useLoginMutation } from '../service'
 
 const googleIcon =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAeH-yrrr87r-7Oxh_SulOx3THV5hvQYufjQiMdvSZe0sLo3F0j001plgLeZTstnVLgRcTNhdvaaWwHmgY5wUo9PG8Lf4TcthlYqg0V8HB8ICTg7OT_qUW3pu3JoSm6E3dwBle7JYOi1vyLcIGhGWT-J1vr6ZKjNEwrHxnXmJMW7WN-KAN9p1AMWrSAAkS72ddLwlIRkXhos-ezgxamL3p5CuGCca0Nd7JzIxSUCLitbLBhn2LtWB3rdcbnjcs7jxZfAz1qEo8gd-DS'
 
 export function LoginScreen() {
-  function handleSubmit(e: FormEvent) {
+  const navigate = useNavigate()
+  const [error, setError] = useState<string | null>(null)
+  const loginMutation = useLoginMutation()
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+    const email = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+
+    try {
+      await loginMutation.mutateAsync({ email, password })
+      navigate('/canvas')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to sign in right now.')
+    }
   }
 
   return (
@@ -85,10 +101,14 @@ export function LoginScreen() {
               </div>
               <button
                 type="submit"
+                disabled={loginMutation.isPending}
                 className="mt-4 flex h-14 w-full items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary-container font-semibold text-on-primary shadow-lg shadow-primary/10 transition-all duration-300 ease-in-out hover:opacity-90"
               >
-                Sign In to The Wired Studio
+                {loginMutation.isPending ? 'Signing in...' : 'Sign In to The Wired Studio'}
               </button>
+              {error ? (
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              ) : null}
             </form>
 
             <p className="mt-10 text-center text-sm text-on-surface-variant">

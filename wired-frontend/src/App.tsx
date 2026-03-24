@@ -1,15 +1,15 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { GalleryScreen } from './screens/GalleryScreen'
-import { DashboardScreen } from './screens/DashboardScreen'
-import { CanvasScreen } from './screens/CanvasScreen'
+import { DashboardScreen } from './dashboard/DashboardScreen'
+import { CanvasScreen } from './canvas'
 import { ShareScreen } from './screens/ShareScreen'
 import { CanvasSyncingScreen } from './screens/CanvasSyncingScreen'
 import { ExportSettingsScreen } from './screens/ExportSettingsScreen'
 import { LoadingScreen } from './screens/LoadingScreen'
-import { LandingPageScreen } from './screens/LandingPageScreen'
-import { LoginScreen } from './screens/LoginScreen'
-import { SignUpScreen } from './screens/SignUpScreen'
+import { LandingPageScreen } from './landing-page/LandingPageScreen'
+import { LoginScreen } from './login/LoginScreen'
+import { SignUpScreen } from './register/SignUpScreen'
 
 export default function App() {
   return (

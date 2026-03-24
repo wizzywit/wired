@@ -1,4 +1,4 @@
-import { Icon } from '../components/ui/Icon'
+import { Icon } from '../components/common/Icon'
 
 /**
  * Dark “syncing canvas” reference — uses inverse surfaces; works best with dark theme toggled on.

@@ -1,4 +1,4 @@
-import type { CanvasTool, DrawShape } from '../../context/canvasTypes'
+import type { CanvasTool, DrawShape } from '../../../context/canvasTypes'
 import { PEN_STROKE_WIDTH, STROKE_WIDTH } from './canvasConfig'
 
 export type Draft =

@@ -1,4 +1,5 @@
 import { Group, Layer, Rect, Stage, Transformer } from 'react-konva'
+import type { RemotePeerAwareness } from '../../canvas/awarenessTypes'
 import { useKonvaCanvasController } from './useKonvaCanvasController'
 import {
   CanvasSelectionStyleBar,
@@ -6,8 +7,21 @@ import {
   CanvasZoomHud,
   CommittedShapeNode,
   DraftShapeNode,
+  RemotePeerAwarenessLayer,
 } from './presentation'
-export function KonvaCanvas() {
+
+export type KonvaCanvasCollaborationProps = {
+  remotePeers: RemotePeerAwareness[]
+  localUserId: string
+  onPointerWorldMove: (pt: { x: number; y: number }) => void
+  onStageMouseLeaveExtra: () => void
+}
+
+export function KonvaCanvas({
+  collaboration,
+}: {
+  collaboration?: KonvaCanvasCollaborationProps | null
+} = {}) {
   const {
     containerRef,
     stageRef,
@@ -38,7 +52,14 @@ export function KonvaCanvas() {
     endPanOnLeave,
     zoomFromCenter,
     resetView,
-  } = useKonvaCanvasController()
+  } = useKonvaCanvasController(
+    collaboration
+      ? {
+          onPointerWorldMove: collaboration.onPointerWorldMove,
+          onStageMouseLeaveExtra: collaboration.onStageMouseLeaveExtra,
+        }
+      : undefined,
+  )
 
   return (
     <div
@@ -103,6 +124,14 @@ export function KonvaCanvas() {
                 draft={draft}
                 stroke={colors.primaryBg}
                 stickyFill={stickyColor}
+              />
+            ) : null}
+
+            {collaboration ? (
+              <RemotePeerAwarenessLayer
+                peers={collaboration.remotePeers}
+                localUserId={collaboration.localUserId}
+                shapes={shapes}
               />
             ) : null}
 

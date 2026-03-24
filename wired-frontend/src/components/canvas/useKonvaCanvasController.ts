@@ -1,5 +1,6 @@
-import { useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import type Konva from 'konva'
+import type { KonvaEventObject } from 'konva/lib/Node'
 import type { Stage as KonvaStage } from 'konva/lib/Stage'
 import { createDotPattern, GRID_CELL } from './utils'
 import { getCanvasBoardColors } from './canvasBoardColors'
@@ -10,7 +11,16 @@ import { useCanvasViewport } from './useCanvasViewport'
 import { useKonvaCanvasInteractionEffects } from './useKonvaCanvasInteractionEffects'
 import { useKonvaCanvasPointerHandlers } from './useKonvaCanvasPointerHandlers'
 
-export function useKonvaCanvasController() {
+export type KonvaCanvasControllerOptions = {
+  onPointerWorldMove?: (pt: { x: number; y: number }) => void
+  onStageMouseLeaveExtra?: () => void
+}
+
+export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
+  const onPointerWorldMoveRef = useRef(opts?.onPointerWorldMove)
+  const onStageMouseLeaveExtraRef = useRef(opts?.onStageMouseLeaveExtra)
+  onPointerWorldMoveRef.current = opts?.onPointerWorldMove
+  onStageMouseLeaveExtraRef.current = opts?.onStageMouseLeaveExtra
   const { theme } = useTheme()
   const tool = useCanvasStore((state) => state.tool)
   const setTool = useCanvasStore((state) => state.setTool)
@@ -98,7 +108,7 @@ export function useKonvaCanvasController() {
     emptyBgPanRef,
   })
 
-  const { handleMouseDown, handleMouseMove, cursorClass } =
+  const { handleMouseDown, handleMouseMove: pointerMouseMove, cursorClass } =
     useKonvaCanvasPointerHandlers({
       tool,
       spaceDown,
@@ -109,6 +119,24 @@ export function useKonvaCanvasController() {
       drawingRef,
       emptyBgPanRef,
     })
+
+  const handleMouseMove = useCallback(
+    (e: KonvaEventObject<MouseEvent>) => {
+      pointerMouseMove(e)
+      const fn = onPointerWorldMoveRef.current
+      if (fn) {
+        const stage = e.target.getStage()
+        const p = stage?.getPointerPosition()
+        if (p) fn(screenToWorld(p.x, p.y))
+      }
+    },
+    [pointerMouseMove, screenToWorld],
+  )
+
+  const endPanOnLeaveWrapped = useCallback(() => {
+    endPanOnLeave()
+    onStageMouseLeaveExtraRef.current?.()
+  }, [endPanOnLeave])
 
   return {
     containerRef,
@@ -137,7 +165,7 @@ export function useKonvaCanvasController() {
     handleWheel,
     handleMouseDown,
     handleMouseMove,
-    endPanOnLeave,
+    endPanOnLeave: endPanOnLeaveWrapped,
     zoomFromCenter,
     resetView,
   }

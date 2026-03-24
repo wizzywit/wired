@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import type { Server } from "socket.io";
 import { env } from "../config/env.js";
 import { redis } from "./redis.js";
 
@@ -104,6 +105,35 @@ export function applyIncomingClientUpdate(roomId: string, base64: string) {
   const doc = getRoomDoc(roomId);
   applyUpdateFromBase64(doc, base64, "client");
   schedulePersist(roomId);
+}
+
+/**
+ * When the last socket leaves a room, flush Yjs to Redis and drop the in-memory doc
+ * so memory does not grow with abandoned rooms.
+ */
+export async function evictRoomIfEmpty(
+  io: Server,
+  roomId: string,
+  exceptSocketId?: string
+): Promise<void> {
+  const sockets = await io.in(roomId).fetchSockets();
+  const remaining =
+    typeof exceptSocketId === "string"
+      ? sockets.filter((s) => s.id !== exceptSocketId)
+      : sockets;
+  if (remaining.length > 0) return;
+
+  const timer = persistTimers.get(roomId);
+  if (timer) {
+    clearTimeout(timer);
+    persistTimers.delete(roomId);
+  }
+
+  if (roomDocs.has(roomId)) {
+    await persistRoomDoc(roomId);
+    roomDocs.delete(roomId);
+  }
+  roomHydrated.delete(roomId);
 }
 
 export { SHAPES_MAP_NAME };

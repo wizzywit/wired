@@ -5,6 +5,7 @@ import { env } from "../config/env.js";
 import {
   applyIncomingClientUpdate,
   encodeDocAsBase64,
+  evictRoomIfEmpty,
   loadRoomDoc
 } from "../lib/yjsRooms.js";
 
@@ -41,11 +42,11 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
       await socket.join(roomId);
 
       const doc = await loadRoomDoc(roomId);
-      const socketsInRoom = await io.in(roomId).allSockets();
+      const socketsInRoom = await io.in(roomId).fetchSockets();
 
       socket.emit("room:joined", {
         roomId,
-        usersOnline: socketsInRoom.size
+        usersOnline: socketsInRoom.length
       });
 
       socket.emit("yjs:sync", {
@@ -56,19 +57,21 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
       socket.to(roomId).emit("room:user-joined", {
         roomId,
         user,
-        usersOnline: socketsInRoom.size
+        usersOnline: socketsInRoom.length
       });
     });
 
     socket.on("room:leave", async ({ roomId }: { roomId: string }) => {
       if (!roomId?.trim()) return;
       await socket.leave(roomId);
-      const socketsInRoom = await io.in(roomId).allSockets();
+      const socketsInRoom = await io.in(roomId).fetchSockets();
       socket.to(roomId).emit("room:user-left", {
         roomId,
         user,
-        usersOnline: socketsInRoom.size
+        usersOnline: socketsInRoom.length
       });
+      socket.to(roomId).emit("awareness:left", { userId: user.id });
+      await evictRoomIfEmpty(io, roomId);
     });
 
     socket.on("yjs:update", ({ roomId, update }: { roomId: string; update: string }) => {
@@ -82,26 +85,43 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
     });
 
     socket.on(
-      "cursor:update",
-      ({ roomId, cursor }: { roomId: string; cursor: { x: number; y: number; tool?: string } }) => {
-        if (!roomId?.trim()) return;
-        socket.to(roomId).emit("cursor:update", {
-          roomId,
+      "awareness:update",
+      (raw: {
+        roomId?: string;
+        cursor?: { wx: number; wy: number; tool?: string } | null;
+        selectedId?: string | null;
+        tool?: string;
+      }) => {
+        const roomId = raw?.roomId?.trim();
+        if (!roomId) return;
+        const payload: Record<string, unknown> = {
           user,
-          cursor
-        });
+          at: Date.now()
+        };
+        if (Object.prototype.hasOwnProperty.call(raw, "cursor")) {
+          payload.cursor = raw.cursor;
+        }
+        if (Object.prototype.hasOwnProperty.call(raw, "selectedId")) {
+          payload.selectedId = raw.selectedId;
+        }
+        if (Object.prototype.hasOwnProperty.call(raw, "tool")) {
+          payload.tool = raw.tool;
+        }
+        socket.to(roomId).emit("awareness:peer", payload);
       }
     );
 
     socket.on("disconnecting", async () => {
       const rooms = [...socket.rooms].filter((room) => room !== socket.id);
       for (const roomId of rooms) {
-        const socketsInRoom = await io.in(roomId).allSockets();
+        const socketsInRoom = await io.in(roomId).fetchSockets();
         socket.to(roomId).emit("room:user-left", {
           roomId,
           user,
-          usersOnline: Math.max(0, socketsInRoom.size - 1)
+          usersOnline: Math.max(0, socketsInRoom.length - 1)
         });
+        socket.to(roomId).emit("awareness:left", { userId: user.id });
+        await evictRoomIfEmpty(io, roomId, socket.id);
       }
     });
   });

@@ -1,16 +1,45 @@
 import * as Y from 'yjs'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { DrawShape } from '../context/canvasTypes'
 import { getSocket, useMeQuery } from '../service'
+import type { RemotePeerAwareness } from './awarenessTypes'
 import {
   ORIGIN_LOCAL,
-  SHAPES_MAP_NAME,
   base64ToUint8,
+  getShapesRoot,
   syncShapesToYMap,
   uint8ToBase64,
   yMapToShapes,
 } from './yjsShapeMap'
+
+const CURSOR_EMIT_MS = 45
+
+function mergePeer(
+  old: RemotePeerAwareness | undefined,
+  payload: {
+    user: RemotePeerAwareness['user']
+    at: number
+    cursor?: { wx: number; wy: number; tool?: string } | null
+    selectedId?: string | null
+    tool?: string
+  },
+): RemotePeerAwareness {
+  const cursor =
+    'cursor' in payload
+      ? payload.cursor === null || payload.cursor === undefined
+        ? undefined
+        : payload.cursor
+      : old?.cursor
+  return {
+    user: payload.user,
+    cursor,
+    selectedId:
+      'selectedId' in payload ? payload.selectedId : old?.selectedId,
+    tool: 'tool' in payload ? payload.tool : old?.tool,
+    at: payload.at,
+  }
+}
 
 export function useCollaboration(
   shapes: DrawShape[],
@@ -24,10 +53,14 @@ export function useCollaboration(
   )
   const [usersOnline, setUsersOnline] = useState(1)
   const [isSynced, setIsSynced] = useState(false)
+  const [remotePeers, setRemotePeers] = useState<RemotePeerAwareness[]>([])
   const syncReadyRef = useRef(false)
   const ydocRef = useRef<Y.Doc | null>(null)
-  const ymapRef = useRef<Y.Map<string> | null>(null)
+  const ymapRef = useRef<ReturnType<typeof getShapesRoot> | null>(null)
+  const lastCursorEmitRef = useRef(0)
+  const meUserIdRef = useRef<string | undefined>(undefined)
   const meQuery = useMeQuery()
+  meUserIdRef.current = meQuery.data?.user?.id
 
   useEffect(() => {
     if (meQuery.isPending) return
@@ -40,7 +73,7 @@ export function useCollaboration(
     const socket = getSocket()
 
     const ydoc = new Y.Doc()
-    const ymap = ydoc.getMap<string>(SHAPES_MAP_NAME)
+    const ymap = getShapesRoot(ydoc)
     ydocRef.current = ydoc
     ymapRef.current = ymap
 
@@ -64,8 +97,15 @@ export function useCollaboration(
       setUsersOnline(payload.usersOnline || 1)
     }
 
-    const onRoomUserLeft = (payload: { usersOnline: number }) => {
+    const onRoomUserLeft = (payload: {
+      usersOnline: number
+      user?: { id: string }
+    }) => {
       setUsersOnline(payload.usersOnline || 1)
+      const leftId = payload.user?.id
+      if (leftId) {
+        setRemotePeers((prev) => prev.filter((p) => p.user.id !== leftId))
+      }
     }
 
     const onYjsSync = (payload: { roomId: string; update: string }) => {
@@ -84,12 +124,38 @@ export function useCollaboration(
       navigate('/login')
     }
 
+    const onAwarenessPeer = (payload: {
+      user: RemotePeerAwareness['user']
+      at: number
+      cursor?: { wx: number; wy: number; tool?: string } | null
+      selectedId?: string | null
+      tool?: string
+    }) => {
+      if (!mounted) return
+      if (payload.user.id === meUserIdRef.current) return
+      setRemotePeers((prev) => {
+        const map = new Map(prev.map((p) => [p.user.id, p]))
+        const old = map.get(payload.user.id)
+        map.set(payload.user.id, mergePeer(old, payload))
+        return [...map.values()].sort((a, b) =>
+          a.user.id.localeCompare(b.user.id),
+        )
+      })
+    }
+
+    const onAwarenessLeft = (payload: { userId: string }) => {
+      if (!mounted) return
+      setRemotePeers((prev) => prev.filter((p) => p.user.id !== payload.userId))
+    }
+
     socket.on('room:joined', onRoomJoined)
     socket.on('room:user-joined', onRoomUserJoined)
     socket.on('room:user-left', onRoomUserLeft)
     socket.on('yjs:sync', onYjsSync)
     socket.on('yjs:update', onYjsUpdate)
     socket.on('auth:error', onAuthError)
+    socket.on('awareness:peer', onAwarenessPeer)
+    socket.on('awareness:left', onAwarenessLeft)
 
     socket.emit('room:join', { roomId })
 
@@ -97,6 +163,7 @@ export function useCollaboration(
       mounted = false
       syncReadyRef.current = false
       setIsSynced(false)
+      setRemotePeers([])
       ydoc.off('update', onUpdate)
       ydoc.destroy()
       ydocRef.current = null
@@ -108,6 +175,8 @@ export function useCollaboration(
       socket.off('yjs:sync', onYjsSync)
       socket.off('yjs:update', onYjsUpdate)
       socket.off('auth:error', onAuthError)
+      socket.off('awareness:peer', onAwarenessPeer)
+      socket.off('awareness:left', onAwarenessLeft)
     }
   }, [
     meQuery.data?.user,
@@ -128,5 +197,46 @@ export function useCollaboration(
     }, ORIGIN_LOCAL)
   }, [shapes, roomId])
 
-  return { roomId, usersOnline, isSynced }
+  const emitAwarenessPatch = useCallback(
+    (patch: {
+      cursor?: { wx: number; wy: number; tool?: string } | null
+      selectedId?: string | null
+      tool?: string
+    }) => {
+      getSocket().emit('awareness:update', { roomId, ...patch })
+    },
+    [roomId],
+  )
+
+  const emitCursorWorld = useCallback(
+    (wx: number, wy: number, tool: string) => {
+      const now = Date.now()
+      if (now - lastCursorEmitRef.current < CURSOR_EMIT_MS) return
+      lastCursorEmitRef.current = now
+      emitAwarenessPatch({ cursor: { wx, wy, tool } })
+    },
+    [emitAwarenessPatch],
+  )
+
+  const clearCursor = useCallback(() => {
+    emitAwarenessPatch({ cursor: null })
+  }, [emitAwarenessPatch])
+
+  const emitSelectionTool = useCallback(
+    (selectedId: string | null, tool: string) => {
+      emitAwarenessPatch({ selectedId, tool })
+    },
+    [emitAwarenessPatch],
+  )
+
+  return {
+    roomId,
+    usersOnline,
+    isSynced,
+    localUserId: meQuery.data?.user?.id ?? '',
+    remotePeers,
+    emitCursorWorld,
+    clearCursor,
+    emitSelectionTool,
+  }
 }

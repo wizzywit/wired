@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo } from 'react'
 import { AppTopNav } from '../components/layout/AppTopNav'
 import { FloatingToolbar } from '../components/layout/FloatingToolbar'
 import { Icon } from '../components/common/Icon'
@@ -17,7 +18,41 @@ function CanvasScreenInner() {
   const canRedo = useCanvasStore((state) => state.history.future.length > 0)
   const shapes = useCanvasStore((state) => state.history.present)
   const replaceShapes = useCanvasStore((state) => state.replaceShapes)
-  const { roomId, usersOnline, isSynced } = useCollaboration(shapes, replaceShapes)
+  const tool = useCanvasStore((state) => state.tool)
+  const selectedId = useCanvasStore((state) => state.selectedId)
+  const {
+    roomId,
+    usersOnline,
+    isSynced,
+    localUserId,
+    remotePeers,
+    emitCursorWorld,
+    clearCursor,
+    emitSelectionTool,
+  } = useCollaboration(shapes, replaceShapes)
+
+  useEffect(() => {
+    if (!isSynced) return
+    emitSelectionTool(selectedId ?? null, tool)
+  }, [emitSelectionTool, isSynced, selectedId, tool])
+
+  const onPointerWorldMove = useCallback(
+    (pt: { x: number; y: number }) => {
+      if (!isSynced) return
+      emitCursorWorld(pt.x, pt.y, tool)
+    },
+    [emitCursorWorld, isSynced, tool],
+  )
+
+  const collaboration = useMemo(
+    () => ({
+      remotePeers,
+      localUserId,
+      onPointerWorldMove,
+      onStageMouseLeaveExtra: clearCursor,
+    }),
+    [clearCursor, localUserId, onPointerWorldMove, remotePeers],
+  )
 
   return (
     <div className="h-dvh overflow-hidden bg-background font-body text-on-background">
@@ -44,7 +79,7 @@ function CanvasScreenInner() {
       <FloatingToolbar variant="canvas" />
 
       <main className="relative ml-0 mt-14 h-[calc(100dvh-3.5rem)] w-full overflow-hidden md:ml-20">
-        <KonvaCanvas />
+        <KonvaCanvas collaboration={collaboration} />
       </main>
 
       <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-white/85 p-1.5 shadow-lg backdrop-blur-xl dark:bg-slate-900/85">

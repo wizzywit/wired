@@ -1,49 +1,118 @@
-# wired-backend
+# Wired Backend
 
-Socket.IO + Express backend for the Wired collaborative canvas.
+Socket.IO + Express backend for Wired collaborative canvas sessions and real-time CRDT sync.
 
-## Features
+## Stack
 
-- Redis-backed cookie sessions (`express-session` + `connect-redis`)
-- Auth endpoints for existing frontend screens:
-  - `POST /auth/register`
-  - `POST /auth/login`
-  - `POST /auth/logout`
-  - `GET /auth/me`
-- Socket.IO room lifecycle:
-  - `room:join`, `room:leave`
-  - `room:user-joined`, `room:user-left`
-- **Yjs CRDT** canvas sync (per room):
-  - Server holds a merged `Y.Doc` per room (in-memory + Redis `wired:rooms:{roomId}:yjs`)
-  - On `room:join`, server emits `yjs:sync` with a base64 `Y.encodeStateAsUpdate` payload
-  - Clients emit `yjs:update` with base64 incremental updates; server applies, persists (debounced), and broadcasts to the room
-  - Legacy JSON room state (`wired:rooms:{roomId}:state`) is migrated once into Yjs when present
-- `cursor:update` for presence (optional client feature)
+- Node.js + TypeScript
+- Express 5
+- Socket.IO
+- Redis 5
+- `express-session` + `connect-redis`
+- Yjs CRDT
+- Zod input validation
 
-## Setup
+## What This Service Handles
 
-1. Copy env file:
+- Session-based auth for frontend login/signup flows
+- Cookie-backed session persistence in Redis
+- WebSocket authorization via shared HTTP session middleware
+- Room join/leave presence updates
+- Yjs document synchronization and persistence per room
+- Legacy canvas snapshot migration into Yjs state
+
+## HTTP Endpoints
+
+- `GET /health` -> health check
+- `POST /auth/register` -> create user and session
+- `POST /auth/login` -> authenticate existing user and create session
+- `POST /auth/logout` -> clear session and cookie
+- `GET /auth/me` -> return current session user
+
+## Socket Events
+
+Incoming:
+
+- `room:join` `{ roomId }`
+- `room:leave` `{ roomId }`
+- `yjs:update` `{ roomId, update }` (base64 CRDT update)
+- `awareness:update` `{ roomId, cursor?, selectedId?, tool? }`
+
+Outgoing:
+
+- `auth:error`
+- `room:joined`
+- `room:user-joined`
+- `room:user-left`
+- `yjs:sync`
+- `yjs:update`
+- `awareness:peer`
+- `awareness:left`
+
+## Yjs + Redis Data Model
+
+- Live room docs are held in-memory per room.
+- Persisted CRDT payload key:
+  - `wired:rooms:{roomId}:yjs`
+- Legacy JSON snapshot key (one-time migration source):
+  - `wired:rooms:{roomId}:state`
+- User storage hash:
+  - `wired:users:by-email`
+
+Room docs are persisted with debounce and evicted from memory when no sockets remain.
+
+## Environment Variables
+
+Copy template:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Run Redis locally (or provide remote `REDIS_URL`).
-3. Start backend:
+Variables:
+
+- `PORT` (default `4000`)
+- `NODE_ENV` (`development` | `test` | `production`)
+- `FRONTEND_ORIGIN` (default `http://localhost:5173`)
+- `SESSION_SECRET` (min 8 chars)
+- `REDIS_URL` (required)
+- `SESSION_TTL_SECONDS` (default 7 days)
+- `ROOM_STATE_TTL_SECONDS` (default 7 days)
+
+## Run Locally
+
+### 1) Install dependencies
+
+```bash
+npm install
+```
+
+### 2) Start Redis
+
+Run Redis locally or set `REDIS_URL` to a remote instance.
+
+### 3) Start development server
 
 ```bash
 npm run dev
 ```
 
-Server defaults to `http://localhost:4000`.
+Backend runs at `http://localhost:4000` by default.
 
-## Frontend integration notes
+## Scripts
 
-- Frontend must send cookies:
-  - HTTP fetch/axios: `credentials: "include"`
-  - Socket.IO client: `withCredentials: true`
-- Typical flow:
-  1. Call `/auth/register` or `/auth/login`
+- `npm run dev` - run with `tsx` in watch mode
+- `npm run build` - compile TypeScript to `dist`
+- `npm run start` - run compiled server
+- `npm run typecheck` - run TypeScript checks without emit
+
+## Frontend Integration Contract
+
+- HTTP requests must include cookies: `credentials: "include"`
+- Socket.IO client must enable credentials: `withCredentials: true`
+- Recommended sequence:
+  1. Authenticate via `/auth/register` or `/auth/login`
   2. Open Socket.IO connection
-  3. Emit `room:join` with `{ roomId }`
-  4. Apply `yjs:sync`, then keep the local `Y.Doc` in sync with UI state and emit `yjs:update` for local CRDT transactions
+  3. Emit `room:join`
+  4. Apply `yjs:sync`
+  5. Continue bidirectional `yjs:update` and awareness events

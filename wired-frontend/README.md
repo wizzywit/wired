@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# Wired Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend application for Wired, a collaborative design and whiteboard experience.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript
+- Vite 8
+- Tailwind CSS
+- Zustand for canvas state
+- TanStack Query for auth/session data fetching
+- Konva + react-konva for 2D canvas rendering
+- Socket.IO client + Yjs for real-time collaboration
 
-## React Compiler
+## Key Capabilities
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Multi-screen product UI (landing, auth, dashboard, canvas, sharing, export, loading)
+- Session-aware auth flow (`/login`, `/signup`, `/auth/me` integration)
+- Collaborative canvas with:
+  - Shape synchronization via Yjs CRDT updates
+  - Presence and awareness (cursor, selected object, active tool)
+  - URL room support (`/canvas?room=<room-id>`)
 
-## Expanding the ESLint configuration
+## Directory Highlights
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `src/canvas`: realtime collaboration orchestration and Yjs shape mapping
+- `src/components/canvas`: drawing, viewport, interactions, and presentation layers
+- `src/service`: backend API client, socket singleton, auth hooks, query client
+- `src/screens` and feature folders: routed product screens
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 20+
+- npm
+- Running Wired backend (`wired-backend`) with Redis configured
+
+### Install
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Configure env
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env
 ```
+
+Default:
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+```
+
+### Run
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+## Scripts
+
+- `npm run dev` - start Vite dev server
+- `npm run build` - type-check and create production build
+- `npm run preview` - preview production build locally
+- `npm run lint` - run ESLint
+- `npm run test` - run Vitest test suite once
+- `npm run test:watch` - run Vitest in watch mode
+
+## Collaboration Flow
+
+1. User logs in or signs up (session cookie established by backend).
+2. Canvas hook resolves user via `/auth/me`; unauthenticated users are redirected to login.
+3. Client joins a room over Socket.IO.
+4. Initial Yjs document state is synced from server.
+5. Local changes are converted to Yjs updates and broadcast to peers.
+6. Awareness events render remote cursor/selection/tool metadata.
+
+## Notes for GitHub Showcase
+
+This frontend demonstrates:
+
+- Product-grade visual polish with componentized design-system primitives
+- Real-time collaborative UX patterns using CRDT + presence overlays
+- Modern React architecture with clearly separated UI, state, API, and collaboration concerns

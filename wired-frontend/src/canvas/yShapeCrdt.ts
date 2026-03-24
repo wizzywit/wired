@@ -30,17 +30,6 @@ function readNum(m: Y.Map<unknown>, key: string): number | undefined {
   return typeof v === 'number' && !Number.isNaN(v) ? v : undefined
 }
 
-function writePoints(inner: Y.Map<unknown>, points: number[]) {
-  let arr = inner.get('points')
-  if (!(arr instanceof Y.Array)) {
-    arr = new Y.Array<number>()
-    inner.set('points', arr)
-  }
-  const yarr = arr as Y.Array<number>
-  yarr.delete(0, yarr.length)
-  for (const p of points) yarr.push([p])
-}
-
 function readPoints(inner: Y.Map<unknown>): number[] {
   const arr = inner.get('points')
   if (!(arr instanceof Y.Array)) return []
@@ -49,6 +38,26 @@ function readPoints(inner: Y.Map<unknown>): number[] {
     if (typeof v === 'number') out.push(v)
   })
   return out
+}
+
+function pointsEqual(a: number[], b: number[]) {
+  return a.length === b.length && a.every((v, i) => v === b[i])
+}
+
+function writePoints(inner: Y.Map<unknown>, points: number[]) {
+  const current = readPoints(inner)
+  if (pointsEqual(current, points)) return
+
+  let arr = inner.get('points')
+  if (!(arr instanceof Y.Array)) {
+    arr = new Y.Array<number>()
+    inner.set('points', arr)
+  }
+  const yarr = arr as Y.Array<number>
+  yarr.delete(0, yarr.length)
+  if (points.length > 0) {
+    yarr.push(points)
+  }
 }
 
 function getOrCreateInner(root: ShapeRootMap, shape: DrawShape): Y.Map<unknown> {

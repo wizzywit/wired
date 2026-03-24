@@ -2,6 +2,13 @@
 
 Socket.IO + Express backend for Wired collaborative canvas sessions and real-time CRDT sync.
 
+![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-blue?logo=typescript&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-5-DC382D?logo=redis&logoColor=white)
+![Yjs](https://img.shields.io/badge/Yjs-CRDT-black)
+
 ## Stack
 
 - Node.js + TypeScript
@@ -20,6 +27,26 @@ Socket.IO + Express backend for Wired collaborative canvas sessions and real-tim
 - Room join/leave presence updates
 - Yjs document synchronization and persistence per room
 - Legacy canvas snapshot migration into Yjs state
+
+## Backend Architecture
+
+```mermaid
+flowchart LR
+  FE[Frontend]
+  HTTP[Express Routes<br/>/health /auth/*]
+  Session[Session Middleware<br/>express-session + connect-redis]
+  WS[Socket.IO Collaboration Server]
+  Rooms[Yjs Room Manager]
+  Redis[(Redis)]
+
+  FE -->|HTTP| HTTP
+  HTTP --> Session
+  FE <-->|WebSocket| WS
+  WS --> Session
+  WS --> Rooms
+  Session <--> Redis
+  Rooms <--> Redis
+```
 
 ## HTTP Endpoints
 

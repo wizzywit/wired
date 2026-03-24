@@ -2,6 +2,13 @@
 
 Frontend application for Wired, a collaborative design and whiteboard experience.
 
+![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
+![Yjs](https://img.shields.io/badge/Yjs-CRDT-black)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-Client-010101?logo=socketdotio&logoColor=white)
+
 ## Stack
 
 - React 19 + TypeScript
@@ -27,6 +34,25 @@ Frontend application for Wired, a collaborative design and whiteboard experience
 - `src/components/canvas`: drawing, viewport, interactions, and presentation layers
 - `src/service`: backend API client, socket singleton, auth hooks, query client
 - `src/screens` and feature folders: routed product screens
+
+## Frontend Architecture
+
+```mermaid
+flowchart TD
+  UI[React Screens + Components]
+  Store[Zustand Canvas Store]
+  Collab[useCollaboration Hook]
+  API[service/backend.ts]
+  Socket[service/socket.ts]
+  Backend[(Wired Backend)]
+
+  UI --> Store
+  UI --> Collab
+  Collab --> Socket
+  UI --> API
+  API --> Backend
+  Socket <--> Backend
+```
 
 ## Getting Started
 

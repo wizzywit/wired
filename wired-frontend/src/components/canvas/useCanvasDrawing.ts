@@ -1,7 +1,7 @@
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CanvasTool, DrawShape } from '../../context/canvasTypes'
-import { newId } from '../../context/canvasTypes'
+import type { CanvasTool, DrawShape } from '../../theme/canvasTypes'
+import { newId } from '../../theme/canvasTypes'
 import {
   commitDraft,
   createDraftFromTool,

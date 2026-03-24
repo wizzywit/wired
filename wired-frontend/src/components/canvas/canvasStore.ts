@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import type { CanvasTool, DrawShape } from '../../context/canvasTypes'
-import { STICKY_COLOR_PRESETS } from '../../context/canvasTypes'
+import type { CanvasTool, DrawShape } from '../../theme/canvasTypes'
+import { STICKY_COLOR_PRESETS } from '../../theme/canvasTypes'
+
 type HistoryState = {
   past: DrawShape[][]
   present: DrawShape[]

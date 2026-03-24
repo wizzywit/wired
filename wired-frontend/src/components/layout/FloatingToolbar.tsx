@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CanvasTool } from '../../context/canvasTypes'
-import { STICKY_COLOR_PRESETS } from '../../context/canvasTypes'
+import type { CanvasTool } from '../../theme/canvasTypes'
+import { STICKY_COLOR_PRESETS } from '../../theme/canvasTypes'
 import { useCanvasStore } from '../canvas'
 import { Icon } from '../common/Icon'
 

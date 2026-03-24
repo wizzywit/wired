@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '../common/Button'
 import { Icon } from '../common/Icon'
-import { useTheme } from '../../context/ThemeContext'
+import { useTheme } from '../../theme/ThemeContext'
 
 type AppTopNavProps = {
   /** e.g. canvas title after brand */

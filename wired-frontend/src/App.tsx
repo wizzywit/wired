@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { ThemeProvider } from './context/ThemeContext'
+import { ThemeProvider } from './theme/ThemeContext'
 import { GalleryScreen } from './screens/GalleryScreen'
 import { DashboardScreen } from './dashboard/DashboardScreen'
 import { CanvasScreen } from './canvas'

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/common/Icon'
-import { useTheme } from '../context/ThemeContext'
+import { useTheme } from '../theme/ThemeContext'
 
 const heroImg =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuC7clFdyRsvWsSFOwcoXpiu0miq0-tWMY44KDQMqEyDP1cf8n1Luv18cJtgo4JJ2yrvWUmMjGbpeXcpbNsSY5SEQsDYopyPp2XPG33ydLnvtJVW3cEcLXSxOg14q-QYHz97fvbbu27SpWOoX-enld4a8xc-_jXPHXK2XWnHHQIuDO2DAg7xYW1_Alxqu3ZThnVCUNL5MvndtMt63QCuB3SUfn_Ld0Aw_d5wlTAmh1dheHt_4_WgJRyCbGfVGpVwZrRCbBT_lx91yhco'

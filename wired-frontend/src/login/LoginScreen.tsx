@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/common/Icon'
+import { safeNextPath } from '../lib/safeNextPath'
 import { useLoginMutation } from '../service'
 
 const googleIcon =
@@ -8,6 +9,7 @@ const googleIcon =
 
 export function LoginScreen() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const loginMutation = useLoginMutation()
 
@@ -20,7 +22,7 @@ export function LoginScreen() {
 
     try {
       await loginMutation.mutateAsync({ email, password })
-      navigate('/canvas')
+      navigate(safeNextPath(searchParams.get('next')))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in right now.')
     }

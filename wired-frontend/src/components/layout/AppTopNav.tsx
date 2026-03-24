@@ -1,3 +1,10 @@
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../common/Button'
 import { Icon } from '../common/Icon'
@@ -6,6 +13,8 @@ import { useTheme } from '../../theme/ThemeContext'
 type AppTopNavProps = {
   /** e.g. canvas title after brand */
   breadcrumb?: string
+  /** Double-click breadcrumb to edit; only shown when this is set */
+  onRenameBreadcrumb?: (nextTitle: string) => Promise<void> | void
   /** Show Files / Edit / View / Insert */
   showAppLinks?: boolean
   /** Extra right-side content before theme toggle */
@@ -17,12 +26,68 @@ type AppTopNavProps = {
 
 export function AppTopNav({
   breadcrumb,
+  onRenameBreadcrumb,
   showAppLinks = true,
   trailing,
   presence,
   variant = 'default',
 }: AppTopNavProps) {
   const { theme, toggleTheme } = useTheme()
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(breadcrumb ?? '')
+  const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!editing) setDraft(breadcrumb ?? '')
+  }, [breadcrumb, editing])
+
+  useEffect(() => {
+    if (!editing) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [editing])
+
+  const cancelEdit = useCallback(() => {
+    setEditing(false)
+    setDraft(breadcrumb ?? '')
+  }, [breadcrumb])
+
+  const commitEdit = useCallback(async () => {
+    if (!onRenameBreadcrumb || saving) return
+    const t = draft.trim()
+    if (t === '') {
+      cancelEdit()
+      return
+    }
+    if (t === breadcrumb) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    try {
+      await onRenameBreadcrumb(t)
+      setEditing(false)
+    } catch {
+      setDraft(breadcrumb ?? '')
+    } finally {
+      setSaving(false)
+    }
+  }, [breadcrumb, cancelEdit, draft, onRenameBreadcrumb, saving])
+
+  const onBreadcrumbKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        void commitEdit()
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        cancelEdit()
+      }
+    },
+    [cancelEdit, commitEdit],
+  )
 
   return (
     <header
@@ -40,9 +105,52 @@ export function AppTopNav({
         {breadcrumb ? (
           <>
             <span className="text-outline-variant">/</span>
-            <span className="truncate font-semibold text-on-surface">
-              {breadcrumb}
-            </span>
+            {editing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={draft}
+                disabled={saving}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={() => void commitEdit()}
+                onKeyDown={onBreadcrumbKeyDown}
+                className="min-w-0 max-w-[min(100%,24rem)] rounded-md border border-primary/40 bg-surface-container-lowest px-2 py-0.5 text-sm font-semibold text-on-surface outline-none ring-primary/30 focus:ring-2 dark:bg-surface-container"
+                aria-label="Document name"
+                maxLength={120}
+              />
+            ) : (
+              <span
+                role={onRenameBreadcrumb ? 'button' : undefined}
+                tabIndex={onRenameBreadcrumb ? 0 : undefined}
+                title={
+                  onRenameBreadcrumb
+                    ? 'Double-click to rename'
+                    : undefined
+                }
+                onDoubleClick={() => {
+                  if (!onRenameBreadcrumb) return
+                  setEditing(true)
+                  setDraft(breadcrumb)
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    !onRenameBreadcrumb ||
+                    (e.key !== 'Enter' && e.key !== ' ')
+                  )
+                    return
+                  e.preventDefault()
+                  setEditing(true)
+                  setDraft(breadcrumb)
+                }}
+                className={`truncate font-semibold text-on-surface ${
+                  onRenameBreadcrumb
+                    ? 'cursor-text rounded-md px-1 outline-none hover:bg-surface-container-low/80 focus-visible:ring-2 focus-visible:ring-primary/40'
+                    : ''
+                }`}
+              >
+                {breadcrumb}
+              </span>
+            )}
           </>
         ) : null}
         {showAppLinks ? (

@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import type { Server } from "socket.io";
 import { env } from "../config/env.js";
+import { bumpDocumentActivity } from "./documents.js";
 import { redis } from "./redis.js";
 
 const SHAPES_MAP_NAME = "shapes";
@@ -51,6 +52,9 @@ async function persistRoomDoc(roomId: string) {
   const update = Y.encodeStateAsUpdate(doc);
   await redis.set(roomYjsKey(roomId), Buffer.from(update).toString("base64"), {
     EX: env.ROOM_STATE_TTL_SECONDS
+  });
+  void bumpDocumentActivity(roomId).catch(() => {
+    /* document may not exist for legacy room ids; ignore */
   });
 }
 

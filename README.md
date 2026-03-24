@@ -117,7 +117,7 @@ Open `http://localhost:5173`.
 ## Development Workflow
 
 - Register or log in from the frontend auth screens.
-- Open `/canvas` to join the default room, or pass `?room=<room-id>` for a shared room.
+- Open a document from the dashboard, or use a shared link `/canvas?document=<document-id>` (requires sign-in).
 - Draw/edit shapes and observe multi-user updates in real time.
 
 ## Environment Variables

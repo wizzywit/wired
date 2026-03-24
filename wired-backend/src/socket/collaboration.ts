@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import type { RequestHandler } from "express";
 import { Server } from "socket.io";
 import { env } from "../config/env.js";
+import { documentExists } from "../lib/documents.js";
 import {
   applyIncomingClientUpdate,
   encodeDocAsBase64,
@@ -39,6 +40,10 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
 
     socket.on("room:join", async ({ roomId }: { roomId: string }) => {
       if (!roomId?.trim()) return;
+      if (!(await documentExists(roomId))) {
+        socket.emit("room:error", { roomId, message: "Document not found." });
+        return;
+      }
       await socket.join(roomId);
 
       const doc = await loadRoomDoc(roomId);
@@ -74,8 +79,9 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
       await evictRoomIfEmpty(io, roomId);
     });
 
-    socket.on("yjs:update", ({ roomId, update }: { roomId: string; update: string }) => {
+    socket.on("yjs:update", async ({ roomId, update }: { roomId: string; update: string }) => {
       if (!roomId?.trim() || typeof update !== "string") return;
+      if (!(await documentExists(roomId))) return;
       applyIncomingClientUpdate(roomId, update);
       socket.to(roomId).emit("yjs:update", {
         roomId,
@@ -86,7 +92,7 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
 
     socket.on(
       "awareness:update",
-      (raw: {
+      async (raw: {
         roomId?: string;
         cursor?: { wx: number; wy: number; tool?: string } | null;
         selectedId?: string | null;
@@ -94,6 +100,7 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
       }) => {
         const roomId = raw?.roomId?.trim();
         if (!roomId) return;
+        if (!(await documentExists(roomId))) return;
         const payload: Record<string, unknown> = {
           user,
           at: Date.now()

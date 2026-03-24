@@ -69,4 +69,42 @@ export async function me() {
   return apiRequest<{ user: SessionUser }>('/auth/me', { method: 'GET' })
 }
 
+export type WireDocument = {
+  id: string
+  title: string
+  ownerId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listDocuments() {
+  return apiRequest<{ documents: WireDocument[] }>('/documents', {
+    method: 'GET',
+  })
+}
+
+export async function createDocument(input?: { title?: string }) {
+  return apiRequest<{ document: WireDocument }>('/documents', {
+    method: 'POST',
+    body: JSON.stringify(input ?? {}),
+  })
+}
+
+export async function getDocument(id: string) {
+  return apiRequest<{ document: WireDocument }>(
+    `/documents/${encodeURIComponent(id)}`,
+    { method: 'GET' },
+  )
+}
+
+export async function patchDocument(id: string, body: { title: string }) {
+  return apiRequest<{ document: WireDocument }>(
+    `/documents/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    },
+  )
+}
+
 export { API_BASE_URL }

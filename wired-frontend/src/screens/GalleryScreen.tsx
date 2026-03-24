@@ -23,7 +23,7 @@ const demos = [
     desc: 'Templates gallery, workspace nav, recent boards — desktop + mobile layouts.',
   },
   {
-    to: '/canvas',
+    to: '/dashboard',
     title: 'Collaborative canvas',
     desc: 'Dot grid, cursors, flow nodes, sticky notes, zoom controls.',
   },

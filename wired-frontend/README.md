@@ -26,7 +26,7 @@ Frontend application for Wired, a collaborative design and whiteboard experience
 - Collaborative canvas with:
   - Shape synchronization via Yjs CRDT updates
   - Presence and awareness (cursor, selected object, active tool)
-  - URL room support (`/canvas?room=<room-id>`)
+  - URL document support (`/canvas?document=<document-id>`)
 
 ## Directory Highlights
 

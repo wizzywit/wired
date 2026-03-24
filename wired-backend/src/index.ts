@@ -5,6 +5,7 @@ import { env } from "./config/env.js";
 import { connectRedis } from "./lib/redis.js";
 import { sessionMiddleware } from "./lib/session.js";
 import { authRouter } from "./routes/auth.js";
+import { documentsRouter } from "./routes/documents.js";
 import { buildCollaborationServer } from "./socket/collaboration.js";
 
 async function bootstrap() {
@@ -26,6 +27,7 @@ async function bootstrap() {
   });
 
   app.use("/auth", authRouter);
+  app.use("/documents", documentsRouter);
 
   const server = http.createServer(app);
   buildCollaborationServer(server, sessionMiddleware);

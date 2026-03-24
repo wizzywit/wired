@@ -1,6 +1,6 @@
 import * as Y from 'yjs'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { DrawShape } from '../theme/canvasTypes'
 import { getSocket, useMeQuery } from '../service'
 import type { RemotePeerAwareness } from './awarenessTypes'
@@ -42,15 +42,13 @@ function mergePeer(
 }
 
 export function useCollaboration(
+  documentId: string,
   shapes: DrawShape[],
   replaceShapes: (shapes: DrawShape[]) => void,
 ) {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const roomId = useMemo(
-    () => searchParams.get('room')?.trim() || 'default-room',
-    [searchParams],
-  )
+  const location = useLocation()
+  const roomId = documentId.trim()
   const [usersOnline, setUsersOnline] = useState(1)
   const [isSynced, setIsSynced] = useState(false)
   const [remotePeers, setRemotePeers] = useState<RemotePeerAwareness[]>([])
@@ -63,9 +61,13 @@ export function useCollaboration(
   meUserIdRef.current = meQuery.data?.user?.id
 
   useEffect(() => {
+    if (!roomId) return
     if (meQuery.isPending) return
     if (meQuery.isError || !meQuery.data?.user) {
-      navigate('/login')
+      const next = encodeURIComponent(
+        `${location.pathname}${location.search}`,
+      )
+      navigate(`/login?next=${next}`)
       return
     }
 
@@ -121,7 +123,15 @@ export function useCollaboration(
     }
 
     const onAuthError = () => {
-      navigate('/login')
+      const next = encodeURIComponent(
+        `${location.pathname}${location.search}`,
+      )
+      navigate(`/login?next=${next}`)
+    }
+
+    const onRoomError = (payload: { roomId: string }) => {
+      if (payload.roomId !== roomId || !mounted) return
+      navigate('/dashboard', { replace: true })
     }
 
     const onAwarenessPeer = (payload: {
@@ -156,6 +166,7 @@ export function useCollaboration(
     socket.on('auth:error', onAuthError)
     socket.on('awareness:peer', onAwarenessPeer)
     socket.on('awareness:left', onAwarenessLeft)
+    socket.on('room:error', onRoomError)
 
     socket.emit('room:join', { roomId })
 
@@ -177,8 +188,11 @@ export function useCollaboration(
       socket.off('auth:error', onAuthError)
       socket.off('awareness:peer', onAwarenessPeer)
       socket.off('awareness:left', onAwarenessLeft)
+      socket.off('room:error', onRoomError)
     }
   }, [
+    location.pathname,
+    location.search,
     meQuery.data?.user,
     meQuery.isError,
     meQuery.isPending,

@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/common/Icon'
+import { safeNextPath } from '../lib/safeNextPath'
 import { useRegisterMutation } from '../service'
 
 const heroImg =
@@ -11,6 +12,7 @@ const googleLogo =
 
 export function SignUpScreen() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const registerMutation = useRegisterMutation()
@@ -29,7 +31,7 @@ export function SignUpScreen() {
         password,
         displayName: displayName || undefined,
       })
-      navigate('/canvas')
+      navigate(safeNextPath(searchParams.get('next')))
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Unable to create account right now.',

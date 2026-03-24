@@ -1,13 +1,40 @@
-import { Circle, Group, Rect, Text } from 'react-konva'
+import { Group, Path, Rect, Text } from 'react-konva'
 import type { DrawShape } from '../../../context/canvasTypes'
 import type { RemotePeerAwareness } from '../../../canvas/awarenessTypes'
 import { shapeWorldBoundsLoose } from '../utils/shapeWorldBounds'
+
+/** Tip at (0,0); matches a classic arrow pointer hotspot. */
+const CURSOR_PATH =
+  'M 0 0 L 0 16 L 5 12 L 8 19 L 10 18 L 7 9 L 12 9 Z'
 
 function colorForUserId(id: string): string {
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
   const hue = Math.abs(h) % 360
   return `hsl(${hue} 72% 48%)`
+}
+
+function initialsFromUser(user: RemotePeerAwareness['user']): string {
+  const name = user.displayName?.trim()
+  if (name) {
+    const parts = name.split(/\s+/).filter(Boolean)
+    if (parts.length >= 2) {
+      const first = parts[0]!.charAt(0)
+      const last = parts[parts.length - 1]!.charAt(0)
+      return (first + last).toUpperCase()
+    }
+    if (parts.length === 1 && parts[0]!.length >= 2) {
+      return parts[0]!.slice(0, 2).toUpperCase()
+    }
+    if (parts.length === 1 && parts[0]!.length === 1) {
+      const e = user.email?.charAt(0) ?? ''
+      return (parts[0]! + e).toUpperCase()
+    }
+  }
+  const local = user.email?.split('@')[0]?.trim() ?? ''
+  if (local.length >= 2) return local.slice(0, 2).toUpperCase()
+  if (local.length === 1) return local.toUpperCase()
+  return '?'
 }
 
 export function RemotePeerAwarenessLayer({
@@ -50,30 +77,45 @@ export function RemotePeerAwarenessLayer({
         const c = p.cursor
         if (!c) return null
         const fill = colorForUserId(p.user.id)
-        const label = p.user.displayName?.trim() || p.user.email || 'Peer'
+        const initials = initialsFromUser(p.user)
+        const badgeW = Math.max(26, 8 + initials.length * 7)
+        const badgeH = 18
+        const badgeX = 10
+        const badgeY = 4
         return (
           <Group key={`cur-${p.user.id}`} x={c.wx} y={c.wy} listening={false}>
-            <Circle radius={5} fill={fill} stroke="#ffffff" strokeWidth={1.5} />
-            <Text
-              text={label.length > 18 ? `${label.slice(0, 17)}…` : label}
-              x={10}
-              y={-18}
-              fontSize={11}
+            <Path
+              data={CURSOR_PATH}
               fill={fill}
-              fontStyle="bold"
+              stroke="#ffffff"
+              strokeWidth={1.25}
+              lineJoin="round"
               listening={false}
             />
-            {c.tool && c.tool !== 'select' ? (
-              <Text
-                text={c.tool}
-                x={10}
-                y={-4}
-                fontSize={9}
+            <Group x={badgeX} y={badgeY} listening={false}>
+              <Rect
+                width={badgeW}
+                height={badgeH}
                 fill={fill}
-                opacity={0.85}
+                stroke="#ffffff"
+                strokeWidth={1}
+                cornerRadius={4}
                 listening={false}
               />
-            ) : null}
+              <Text
+                text={initials}
+                x={0}
+                y={0}
+                width={badgeW}
+                height={badgeH}
+                align="center"
+                verticalAlign="middle"
+                fontSize={10}
+                fill="#ffffff"
+                fontStyle="bold"
+                listening={false}
+              />
+            </Group>
           </Group>
         )
       })}

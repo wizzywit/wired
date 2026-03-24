@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import type { DrawShape } from '../context/canvasTypes'
+import type { DrawShape } from '../theme/canvasTypes'
 import {
   type ShapeRootMap,
   syncShapesToYRoot,

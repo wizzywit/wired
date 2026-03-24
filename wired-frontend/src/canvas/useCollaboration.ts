@@ -1,7 +1,7 @@
 import * as Y from 'yjs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import type { DrawShape } from '../context/canvasTypes'
+import type { DrawShape } from '../theme/canvasTypes'
 import { getSocket, useMeQuery } from '../service'
 import type { RemotePeerAwareness } from './awarenessTypes'
 import {

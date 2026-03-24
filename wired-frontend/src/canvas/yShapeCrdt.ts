@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import type { DrawShape, StrokeDashPreset } from '../context/canvasTypes'
+import type { DrawShape, StrokeDashPreset } from '../theme/canvasTypes'
 
 /** Root map values: nested `Y.Map` (structured CRDT) or legacy JSON `string`. */
 export type ShapeRootMap = Y.Map<unknown>

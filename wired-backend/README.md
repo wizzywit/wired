@@ -13,10 +13,12 @@ Socket.IO + Express backend for the Wired collaborative canvas.
 - Socket.IO room lifecycle:
   - `room:join`, `room:leave`
   - `room:user-joined`, `room:user-left`
-- Collaborative canvas sync events:
-  - `canvas:replace` (persist full snapshot per room)
-  - `canvas:request-state`, `canvas:state`
-  - `cursor:update`
+- **Yjs CRDT** canvas sync (per room):
+  - Server holds a merged `Y.Doc` per room (in-memory + Redis `wired:rooms:{roomId}:yjs`)
+  - On `room:join`, server emits `yjs:sync` with a base64 `Y.encodeStateAsUpdate` payload
+  - Clients emit `yjs:update` with base64 incremental updates; server applies, persists (debounced), and broadcasts to the room
+  - Legacy JSON room state (`wired:rooms:{roomId}:state`) is migrated once into Yjs when present
+- `cursor:update` for presence (optional client feature)
 
 ## Setup
 
@@ -44,3 +46,4 @@ Server defaults to `http://localhost:4000`.
   1. Call `/auth/register` or `/auth/login`
   2. Open Socket.IO connection
   3. Emit `room:join` with `{ roomId }`
+  4. Apply `yjs:sync`, then keep the local `Y.Doc` in sync with UI state and emit `yjs:update` for local CRDT transactions

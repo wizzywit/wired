@@ -17,12 +17,7 @@ function CanvasScreenInner() {
   const canRedo = useCanvasStore((state) => state.history.future.length > 0)
   const shapes = useCanvasStore((state) => state.history.present)
   const replaceShapes = useCanvasStore((state) => state.replaceShapes)
-  const applyRemotePatch = useCanvasStore((state) => state.applyRemotePatch)
-  const { roomId, usersOnline, isSynced } = useCollaboration(
-    shapes,
-    replaceShapes,
-    applyRemotePatch,
-  )
+  const { roomId, usersOnline, isSynced } = useCollaboration(shapes, replaceShapes)
 
   return (
     <div className="h-dvh overflow-hidden bg-background font-body text-on-background">

@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import type { CanvasTool, DrawShape } from '../../context/canvasTypes'
 import { STICKY_COLOR_PRESETS } from '../../context/canvasTypes'
-import { applyPatchOps, type CanvasPatchOp } from '../../canvas/canvasPatch'
-
 type HistoryState = {
   past: DrawShape[][]
   present: DrawShape[]
@@ -21,7 +19,6 @@ type CanvasStore = {
   updateShape: (id: string, shape: DrawShape) => void
   removeShape: (id: string) => void
   replaceShapes: (shapes: DrawShape[]) => void
-  applyRemotePatch: (operations: CanvasPatchOp[]) => void
   setSelectedId: (id: string | null) => void
   setEditingId: (id: string | null) => void
   setStickyPreset: (fill: string, textColor: string) => void
@@ -91,26 +88,6 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
         history: {
           past: [],
           present: shapes,
-          future: [],
-        },
-      }
-    }),
-  applyRemotePatch: (operations) =>
-    set((state) => {
-      const nextShapes = applyPatchOps(state.history.present, operations)
-      const presentIds = new Set(nextShapes.map((shape) => shape.id))
-      return {
-        selectedId:
-          state.selectedId && presentIds.has(state.selectedId)
-            ? state.selectedId
-            : null,
-        editingId:
-          state.editingId && presentIds.has(state.editingId)
-            ? state.editingId
-            : null,
-        history: {
-          past: [],
-          present: nextShapes,
           future: [],
         },
       }

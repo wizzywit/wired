@@ -126,6 +126,27 @@ npm run dev
 
 Backend runs at `http://localhost:4000` by default.
 
+## Troubleshooting
+
+### `Error: read ETIMEDOUT` (Redis)
+
+The app cannot reach the host in `REDIS_URL` before the TCP/socket deadline. Typical causes:
+
+- **Redis not running** — start a server on the host/port in `REDIS_URL` (often `localhost:6379`).
+- **Wrong host** — e.g. Docker Desktop: use `host.docker.internal` from inside a container instead of `localhost` if Redis runs on the host (or publish port `-p 6379:6379` and use the right hostname).
+- **Firewall / VPN** — blocks outbound access to a cloud Redis; allow the port or disable split tunneling for that host.
+- **Managed Redis** — IP allowlist must include your current network; TLS may require `rediss://` instead of `redis://`.
+
+Quick local check (replace host/port if needed):
+
+```bash
+redis-cli -u "$REDIS_URL" ping
+# or
+nc -zv localhost 6379
+```
+
+On startup, the backend logs the resolved target and a redacted `REDIS_URL` when connection fails.
+
 ## Scripts
 
 - `npm run dev` - run with `tsx` in watch mode

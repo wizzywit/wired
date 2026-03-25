@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import { AppTopNav } from '../components/layout/AppTopNav'
+import { Link } from 'react-router-dom';
+import { AppTopNav } from '../components/layout/AppTopNav/AppTopNav';
 
 const demos = [
   {
@@ -23,11 +23,6 @@ const demos = [
     desc: 'Templates gallery, workspace nav, recent boards — desktop + mobile layouts.',
   },
   {
-    to: '/dashboard',
-    title: 'Collaborative canvas',
-    desc: 'Dot grid, cursors, flow nodes, sticky notes, zoom controls.',
-  },
-  {
     to: '/share',
     title: 'Share & collaborate',
     desc: 'Glass modal, invites, link access, role rows.',
@@ -47,7 +42,7 @@ const demos = [
     title: 'Dashboard loading',
     desc: 'Ether skeletons, top progress glide, sync glow.',
   },
-] as const
+] as const;
 
 export function GalleryScreen() {
   return (
@@ -55,15 +50,11 @@ export function GalleryScreen() {
       <AppTopNav showAppLinks={false} />
       <main className="mx-auto max-w-4xl px-6 pb-24 pt-24">
         <header className="mb-12 space-y-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-outline">
-            The Wired Studio — design system
-          </p>
-          <h1 className="font-display text-4xl font-extrabold tracking-tight text-on-surface">
-            Sample views
-          </h1>
+          <p className="text-xs font-bold uppercase tracking-widest text-outline">The Wired Studio — design system</p>
+          <h1 className="font-display text-4xl font-extrabold tracking-tight text-on-surface">Sample views</h1>
           <p className="max-w-xl text-on-surface-variant">
-            Token-driven surfaces, glass panels, and gradients from Stitch exports.
-            Toggle light/dark in the header; resize for mobile patterns.{' '}
+            Token-driven surfaces, glass panels, and gradients from Stitch exports. Toggle light/dark in the header;
+            resize for mobile patterns.{' '}
             <Link to="/landing" className="font-semibold text-primary hover:underline">
               Marketing landing
             </Link>
@@ -87,14 +78,12 @@ export function GalleryScreen() {
               >
                 <h2 className="font-semibold text-on-surface">{d.title}</h2>
                 <p className="mt-2 text-sm text-on-surface-variant">{d.desc}</p>
-                <span className="mt-4 inline-block text-sm font-semibold text-primary">
-                  Open →
-                </span>
+                <span className="mt-4 inline-block text-sm font-semibold text-primary">Open →</span>
               </Link>
             </li>
           ))}
         </ul>
       </main>
     </div>
-  )
+  );
 }

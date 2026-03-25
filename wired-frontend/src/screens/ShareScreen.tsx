@@ -1,6 +1,6 @@
-import { AppTopNav } from '../components/layout/AppTopNav'
-import { FloatingToolbar } from '../components/layout/FloatingToolbar'
-import { Icon } from '../components/common/Icon'
+import { AppTopNav } from '../components/layout/AppTopNav/AppTopNav';
+import { FloatingToolbar } from '../components/layout/FloatingToolbar/FloatingToolbar';
+import { Icon } from '../components/common/Icon';
 
 export function ShareScreen() {
   return (
@@ -20,12 +20,8 @@ export function ShareScreen() {
         <div className="glass-panel w-full max-w-lg overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.12)] dark:shadow-black/40">
           <div className="flex items-start justify-between px-8 pb-6 pt-8">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-on-surface">
-                Share & Collaborate
-              </h2>
-              <p className="mt-1 text-sm text-on-surface-variant">
-                Project: &quot;Quarterly Strategy Board&quot;
-              </p>
+              <h2 className="text-2xl font-bold tracking-tight text-on-surface">Share & Collaborate</h2>
+              <p className="mt-1 text-sm text-on-surface-variant">Project: &quot;Quarterly Strategy Board&quot;</p>
             </div>
             <button
               type="button"
@@ -58,26 +54,9 @@ export function ShareScreen() {
             <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70">
               People with access
             </h3>
-            <PersonRow
-              name="Alex Rivera"
-              email="alex@thewired.studio"
-              role="Owner"
-              seed="alex"
-            />
-            <PersonRow
-              name="Sarah Chen"
-              email="sarah.c@design.co"
-              role="Editor"
-              seed="sarah"
-              showDropdown
-            />
-            <PersonRow
-              name="Jordan Smith"
-              email="j.smith@vendor.io"
-              role="Viewer"
-              seed="jordan"
-              showDropdown
-            />
+            <PersonRow name="Alex Rivera" email="alex@thewired.studio" role="Owner" seed="alex" />
+            <PersonRow name="Sarah Chen" email="sarah.c@design.co" role="Editor" seed="sarah" showDropdown />
+            <PersonRow name="Jordan Smith" email="j.smith@vendor.io" role="Viewer" seed="jordan" showDropdown />
           </div>
 
           <div className="h-px bg-outline-variant/15" />
@@ -133,13 +112,11 @@ export function ShareScreen() {
       <div className="pointer-events-none fixed right-[25%] top-[40%] z-10 flex scale-75 flex-col items-start md:scale-100">
         <Icon name="near_me" className="text-2xl text-tertiary" filled />
         <div className="-mt-0.5 rounded-lg rounded-tl-none bg-tertiary px-2 py-0.5 shadow-lg">
-          <span className="font-label text-[10px] font-bold uppercase text-white">
-            Sarah is editing...
-          </span>
+          <span className="font-label text-[10px] font-bold uppercase text-white">Sarah is editing...</span>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function PersonRow({
@@ -149,11 +126,11 @@ function PersonRow({
   seed,
   showDropdown,
 }: {
-  name: string
-  email: string
-  role: string
-  seed: string
-  showDropdown?: boolean
+  name: string;
+  email: string;
+  role: string;
+  seed: string;
+  showDropdown?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -182,5 +159,5 @@ function PersonRow({
         <span className="px-3 text-xs font-medium text-on-surface-variant/60">{role}</span>
       )}
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { Icon } from '../components/common/Icon'
+import { Icon } from '../components/common/Icon';
 
 /**
  * Dark “syncing canvas” reference — uses inverse surfaces; works best with dark theme toggled on.
@@ -8,18 +8,17 @@ export function CanvasSyncingScreen() {
     <div className="min-h-dvh overflow-hidden bg-inverse-surface font-body text-inverse-on-surface selection:bg-primary-container selection:text-white">
       <header className="fixed left-0 top-0 z-50 flex h-16 w-full items-center justify-between bg-[#191c1e]/80 px-6 backdrop-blur-xl">
         <div className="flex items-center gap-6">
-          <span className="font-display text-lg font-extrabold tracking-tighter text-[#f2f4f6]">
-            The Wired Studio
-          </span>
+          <span className="font-display text-lg font-extrabold tracking-tighter text-[#f2f4f6]">The Wired Studio</span>
           <div className="flex items-center gap-2 rounded-full bg-surface-container-highest/10 px-3 py-1">
             <div className="h-2 w-2 animate-breathing rounded-full bg-primary-fixed-dim" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary-fixed-dim">
-              Saving...
-            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary-fixed-dim">Saving...</span>
           </div>
         </div>
         <nav className="hidden items-center space-x-8 md:flex">
-          <a className="border-b-2 border-[#0057FF] font-display text-sm font-bold tracking-tight text-[#b6c4ff]" href="#">
+          <a
+            className="border-b-2 border-[#0057FF] font-display text-sm font-bold tracking-tight text-[#b6c4ff]"
+            href="#"
+          >
             Select
           </a>
           <a
@@ -53,9 +52,7 @@ export function CanvasSyncingScreen() {
       </header>
 
       <aside className="fixed left-0 top-1/2 z-40 m-4 flex h-fit w-20 -translate-y-1/2 flex-col items-center space-y-4 rounded-xl bg-[#191c1e]/80 py-4 shadow-[0_20px_40px_rgba(25,28,30,0.06)] backdrop-blur-xl">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-outline-variant">
-          Toolbar
-        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-outline-variant">Toolbar</span>
         <button
           type="button"
           className="group relative rounded-lg bg-[#0057FF] p-3 text-white shadow-lg shadow-[#0057FF]/20 transition-all active:scale-90"
@@ -129,5 +126,5 @@ export function CanvasSyncingScreen() {
 
       <div className="fixed left-0 top-0 z-[60] h-[2px] w-[30%] bg-primary" />
     </div>
-  )
+  );
 }

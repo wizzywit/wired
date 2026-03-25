@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom'
-import { Icon } from '../common/Icon'
+import { NavLink } from 'react-router-dom';
+import { Icon } from '../common/Icon';
 
 export function MobileBottomNav() {
   return (
@@ -15,9 +15,7 @@ export function MobileBottomNav() {
         }
       >
         <Icon name="home_app_logo" size="sm" filled />
-        <span className="mt-1 font-sans text-[11px] font-medium uppercase tracking-wider">
-          Home
-        </span>
+        <span className="mt-1 font-sans text-[11px] font-medium uppercase tracking-wider">Home</span>
       </NavLink>
       {[
         { label: 'Templates', icon: 'dashboard_customize' as const },
@@ -30,11 +28,9 @@ export function MobileBottomNav() {
           className="flex flex-col items-center justify-center rounded-2xl px-4 py-1.5 text-slate-400 transition-transform duration-150 hover:text-slate-900 active:scale-90 dark:hover:text-slate-100"
         >
           <Icon name={icon} size="sm" />
-          <span className="mt-1 font-sans text-[11px] font-medium uppercase tracking-wider">
-            {label}
-          </span>
+          <span className="mt-1 font-sans text-[11px] font-medium uppercase tracking-wider">{label}</span>
         </button>
       ))}
     </nav>
-  )
+  );
 }

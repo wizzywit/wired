@@ -1,9 +1,9 @@
-import type { InputHTMLAttributes } from 'react'
-import { Icon } from './Icon'
+import type { InputHTMLAttributes } from 'react';
+import { Icon } from './Icon';
 
 type SearchFieldProps = {
-  className?: string
-} & InputHTMLAttributes<HTMLInputElement>
+  className?: string;
+} & InputHTMLAttributes<HTMLInputElement>;
 
 export function SearchField({ className = '', ...rest }: SearchFieldProps) {
   return (
@@ -17,5 +17,5 @@ export function SearchField({ className = '', ...rest }: SearchFieldProps) {
         {...rest}
       />
     </div>
-  )
+  );
 }

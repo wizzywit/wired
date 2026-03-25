@@ -1,6 +1,6 @@
-import { AppTopNav } from '../components/layout/AppTopNav'
-import { FloatingToolbar } from '../components/layout/FloatingToolbar'
-import { Icon } from '../components/common/Icon'
+import { AppTopNav } from '../components/layout/AppTopNav/AppTopNav';
+import { FloatingToolbar } from '../components/layout/FloatingToolbar/FloatingToolbar';
+import { Icon } from '../components/common/Icon';
 
 export function ExportSettingsScreen() {
   return (
@@ -173,10 +173,8 @@ export function ExportSettingsScreen() {
             fill="#0049db"
           />
         </svg>
-        <span className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-white shadow-lg">
-          Alexander V.
-        </span>
+        <span className="rounded bg-primary px-2 py-1 text-[10px] font-bold text-white shadow-lg">Alexander V.</span>
       </div>
     </div>
-  )
+  );
 }

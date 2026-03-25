@@ -98,5 +98,5 @@ export function LoadingScreen() {
         <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-secondary-container/10 blur-[100px]" />
       </div>
     </div>
-  )
+  );
 }

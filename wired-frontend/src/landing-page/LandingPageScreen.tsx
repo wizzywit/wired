@@ -1,18 +1,18 @@
-import { Link } from 'react-router-dom'
-import { Icon } from '../components/common/Icon'
-import { useTheme } from '../theme/ThemeContext'
+import { Link } from 'react-router-dom';
+import { Icon } from '../components/common/Icon';
+import { useTheme } from '../theme/ThemeContext';
 
 const heroImg =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuC7clFdyRsvWsSFOwcoXpiu0miq0-tWMY44KDQMqEyDP1cf8n1Luv18cJtgo4JJ2yrvWUmMjGbpeXcpbNsSY5SEQsDYopyPp2XPG33ydLnvtJVW3cEcLXSxOg14q-QYHz97fvbbu27SpWOoX-enld4a8xc-_jXPHXK2XWnHHQIuDO2DAg7xYW1_Alxqu3ZThnVCUNL5MvndtMt63QCuB3SUfn_Ld0Aw_d5wlTAmh1dheHt_4_WgJRyCbGfVGpVwZrRCbBT_lx91yhco'
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuC7clFdyRsvWsSFOwcoXpiu0miq0-tWMY44KDQMqEyDP1cf8n1Luv18cJtgo4JJ2yrvWUmMjGbpeXcpbNsSY5SEQsDYopyPp2XPG33ydLnvtJVW3cEcLXSxOg14q-QYHz97fvbbu27SpWOoX-enld4a8xc-_jXPHXK2XWnHHQIuDO2DAg7xYW1_Alxqu3ZThnVCUNL5MvndtMt63QCuB3SUfn_Ld0Aw_d5wlTAmh1dheHt_4_WgJRyCbGfVGpVwZrRCbBT_lx91yhco';
 
 const showcaseImg =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBz1yv6nyGHaNZDDVK2kNfPvki_wTYw5aBKZAT8ZxeC-YllSenZyR7cEmLBMYVsAohElcsKhs1JPiNM5qU4IcimolJxlIIY2JM-Ch_8s0x2mgUgzzSqmOFZMuw9eqvL66VRLqshXDXtmKgFdf-8rnOKO57zc6RpQHYmOG6PeElHoreyzR-jBW4GCDy4HEbO3_sYngpKCOBypLINsBg63JScc3LvPCy9hsCDd7nn_VqyoKu88Kg1OOcjIW7pvQVd4zwt2AReEcS14j_k'
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuBz1yv6nyGHaNZDDVK2kNfPvki_wTYw5aBKZAT8ZxeC-YllSenZyR7cEmLBMYVsAohElcsKhs1JPiNM5qU4IcimolJxlIIY2JM-Ch_8s0x2mgUgzzSqmOFZMuw9eqvL66VRLqshXDXtmKgFdf-8rnOKO57zc6RpQHYmOG6PeElHoreyzR-jBW4GCDy4HEbO3_sYngpKCOBypLINsBg63JScc3LvPCy9hsCDd7nn_VqyoKu88Kg1OOcjIW7pvQVd4zwt2AReEcS14j_k';
 
 const quoteAvatar =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuC8mdRIH2M-OkmFfphO8eTTBRfo7yjYko-zqovKzPl01_KzVHr8wnPcbUoCZC-qOYptBikwSdLpij61nqaw7AGn1t5aLaYqO4PNzgR_sjEBrGW8G0UAVy6s8Tq3gyM33pE6ymiQgBuXMZw9WV7o5PfcFMUBGh-1xHhAsbaKI0V7P46-KaYwnb6wg0p32jKlIdY4FBhQq-d0Sg7k8W7EAW4LNj_3JHQwOR407_kzChWRoQ-KQBhkNc-qvqXbBbEtv1GwrY_G5O_Sb2_X'
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuC8mdRIH2M-OkmFfphO8eTTBRfo7yjYko-zqovKzPl01_KzVHr8wnPcbUoCZC-qOYptBikwSdLpij61nqaw7AGn1t5aLaYqO4PNzgR_sjEBrGW8G0UAVy6s8Tq3gyM33pE6ymiQgBuXMZw9WV7o5PfcFMUBGh-1xHhAsbaKI0V7P46-KaYwnb6wg0p32jKlIdY4FBhQq-d0Sg7k8W7EAW4LNj_3JHQwOR407_kzChWRoQ-KQBhkNc-qvqXbBbEtv1GwrY_G5O_Sb2_X';
 
 export function LandingPageScreen() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="bg-surface font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
@@ -38,10 +38,7 @@ export function LandingPageScreen() {
           </div>
         </div>
         <div className="flex items-center gap-4 md:gap-6">
-          <Link
-            to="/"
-            className="hidden text-sm font-medium text-on-surface-variant hover:text-primary sm:inline"
-          >
+          <Link to="/" className="hidden text-sm font-medium text-on-surface-variant hover:text-primary sm:inline">
             Demos
           </Link>
           <button
@@ -74,8 +71,8 @@ export function LandingPageScreen() {
               The Infinite Canvas for <span className="italic text-primary">Collaborative</span> Minds.
             </h1>
             <p className="mx-auto mb-12 max-w-2xl text-xl font-light leading-relaxed text-on-surface-variant md:text-2xl">
-              Designed for curators, creators, and visionaries. An editorial experience for modern teamwork,
-              where tools disappear and ideas take center stage.
+              Designed for curators, creators, and visionaries. An editorial experience for modern teamwork, where tools
+              disappear and ideas take center stage.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
@@ -105,8 +102,8 @@ export function LandingPageScreen() {
                 </span>
                 <h3 className="mb-4 font-headline text-4xl font-bold">Fluid Collaboration</h3>
                 <p className="max-w-md text-on-surface-variant">
-                  Experience zero-latency cursor tracking. Feel the presence of your team as if they were in
-                  the same room.
+                  Experience zero-latency cursor tracking. Feel the presence of your team as if they were in the same
+                  room.
                 </p>
               </div>
               <div className="absolute inset-0 left-1/4 top-1/2 translate-y-12">
@@ -177,9 +174,8 @@ export function LandingPageScreen() {
           <div className="mx-auto max-w-4xl text-center">
             <Icon name="format_quote" filled className="mb-8 text-5xl text-primary" />
             <blockquote className="mb-10 font-headline text-3xl font-bold leading-tight text-on-surface md:text-4xl">
-              &quot;The Wired Studio isn&apos;t just a tool; it&apos;s the air we breathe. It removed the
-              friction between thought and execution, allowing our team to curate experiences that truly
-              matter.&quot;
+              &quot;The Wired Studio isn&apos;t just a tool; it&apos;s the air we breathe. It removed the friction
+              between thought and execution, allowing our team to curate experiences that truly matter.&quot;
             </blockquote>
             <div className="flex items-center justify-center gap-4">
               <div className="h-12 w-12 overflow-hidden rounded-full bg-surface-variant">
@@ -223,10 +219,16 @@ export function LandingPageScreen() {
             © 2024 The Wired Studio. Designed for Curators.
           </span>
           <div className="flex gap-6">
-            <a href="#" className="font-sans text-sm uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">
+            <a
+              href="#"
+              className="font-sans text-sm uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary"
+            >
               Privacy Policy
             </a>
-            <a href="#" className="font-sans text-sm uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary">
+            <a
+              href="#"
+              className="font-sans text-sm uppercase tracking-widest text-on-surface-variant transition-colors hover:text-primary"
+            >
               Terms of Service
             </a>
           </div>
@@ -244,5 +246,5 @@ export function LandingPageScreen() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

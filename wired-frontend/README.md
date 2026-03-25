@@ -65,9 +65,6 @@ flowchart TB
   S --> UC
   R --> A
   A --> R
-  R --> SVC
-  A --> SVC
-  S --> DOM
 ```
 
 **Example — `login/`:** `LoginScreen.tsx` (view) → `useLoginScreenUseCase` (use case) → `useLoginMutation` (repository) → `login` in `loginAdapter` (adapter) + `parseLoginFormFields` from `loginLogic` (service). The mutation uses `queryClient` from `service/` to align cache with session.

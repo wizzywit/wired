@@ -46,7 +46,7 @@ Within a feature, responsibilities map to **five functional layers** inspired by
 
 ```mermaid
 flowchart TB
-  subgraph feature [Feature folder e.g. login or dashboard]
+  subgraph feature [Feature folder e.g. login, dashboard or collaboration-canvas]
     V[1. View — Screen + components]
     UC[2. Use case — use*UseCase]
     R[3. Repository — Query / Mutation hooks]

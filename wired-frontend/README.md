@@ -59,10 +59,11 @@ flowchart TB
     DOM[domain-types, utils, theme]
   end
 
-  V --> UC
+  V -->|Data flow|UC
   UC --> V
   UC --> R
   S --> UC
+  R --> S
   R --> A
   A --> R
 ```

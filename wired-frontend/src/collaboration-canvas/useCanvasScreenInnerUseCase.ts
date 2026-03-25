@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useCanvasStore } from './canvas';
 import { useUpdateDocumentMutation } from './useDocument';
 import { useMeQuery } from '../hooks';
@@ -6,6 +7,8 @@ import { useCollaboration } from './useCollaboration';
 import { useCanvasPresenceUsers } from './useCanvasPresenceUsers';
 
 export function useCanvasScreenInnerUseCase({ documentId }: { documentId: string }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const replaceShapes = useCanvasStore((state) => state.replaceShapes);
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
@@ -17,8 +20,29 @@ export function useCanvasScreenInnerUseCase({ documentId }: { documentId: string
 
   const meQuery = useMeQuery();
   const updateDocument = useUpdateDocumentMutation();
+
+  const onAuthRequired = useCallback(() => {
+    const next = encodeURIComponent(`${location.pathname}${location.search}`);
+    navigate(`/login?next=${next}`);
+  }, [navigate, location.pathname, location.search]);
+
+  const onRoomInvalid = useCallback(() => {
+    navigate('/dashboard', { replace: true });
+  }, [navigate]);
+
   const { usersOnline, isSynced, localUserId, remotePeers, emitCursorWorld, clearCursor, emitSelectionTool } =
-    useCollaboration(documentId, shapes, replaceShapes);
+    useCollaboration({
+      documentId,
+      shapes,
+      replaceShapes,
+      auth: {
+        isPending: meQuery.isPending,
+        isError: meQuery.isError,
+        userId: meQuery.data?.user?.id,
+      },
+      onAuthRequired,
+      onRoomInvalid,
+    });
 
   const { presenceFaceUsers, presenceOverflow } = useCanvasPresenceUsers({
     meUser: meQuery.data?.user,

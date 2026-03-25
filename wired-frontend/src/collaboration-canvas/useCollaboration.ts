@@ -1,10 +1,18 @@
 import * as Y from 'yjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import type { DrawShape } from '../theme/canvasTypes';
-import { getSocket } from '../service';
-import { useMeQuery } from '../hooks';
 import type { RemotePeerAwareness } from './awarenessTypes';
+import {
+  CURSOR_EMIT_MIN_INTERVAL_MS,
+  shouldEmitCursor,
+  upsertRemotePeersAfterAwareness,
+} from './collaborationLogic';
+import {
+  emitAwarenessUpdateToRoom,
+  emitYjsUpdateToRoom,
+  subscribeCanvasCollaborationSocket,
+  type AwarenessEmitPatch,
+} from './collaborationSocketAdapter';
 import {
   ORIGIN_LOCAL,
   base64ToUint8,
@@ -14,40 +22,25 @@ import {
   yMapToShapes,
 } from './yjsShapeMap';
 
-const CURSOR_EMIT_MS = 45;
+export type UseCollaborationAuth = {
+  isPending: boolean;
+  isError: boolean;
+  userId: string | undefined;
+};
 
-function mergePeer(
-  old: RemotePeerAwareness | undefined,
-  payload: {
-    user: RemotePeerAwareness['user'];
-    at: number;
-    cursor?: { wx: number; wy: number; tool?: string } | null;
-    selectedId?: string | null;
-    tool?: string;
-  }
-): RemotePeerAwareness {
-  const cursor =
-    'cursor' in payload
-      ? payload.cursor === null || payload.cursor === undefined
-        ? undefined
-        : payload.cursor
-      : old?.cursor;
-  return {
-    user: payload.user,
-    cursor,
-    selectedId: 'selectedId' in payload ? payload.selectedId : old?.selectedId,
-    tool: 'tool' in payload ? payload.tool : old?.tool,
-    at: payload.at,
-  };
-}
-
-export function useCollaboration(
-  documentId: string,
-  shapes: DrawShape[],
-  replaceShapes: (shapes: DrawShape[]) => void
-) {
-  const navigate = useNavigate();
-  const location = useLocation();
+/**
+ * Repository-style hook: Yjs document sync + collaboration socket lifecycle.
+ * Navigation on auth/room errors is supplied by the use case (`onAuthRequired` / `onRoomInvalid`).
+ */
+export function useCollaboration(options: {
+  documentId: string;
+  shapes: DrawShape[];
+  replaceShapes: (shapes: DrawShape[]) => void;
+  auth: UseCollaborationAuth;
+  onAuthRequired: () => void;
+  onRoomInvalid: () => void;
+}) {
+  const { documentId, shapes, replaceShapes, auth, onAuthRequired, onRoomInvalid } = options;
   const roomId = documentId.trim();
   const [usersOnline, setUsersOnline] = useState(1);
   const [isSynced, setIsSynced] = useState(false);
@@ -56,24 +49,21 @@ export function useCollaboration(
   const ydocRef = useRef<Y.Doc | null>(null);
   const ymapRef = useRef<ReturnType<typeof getShapesRoot> | null>(null);
   const lastCursorEmitRef = useRef(0);
-  const meUserIdRef = useRef<string | undefined>(undefined);
-  const meQuery = useMeQuery();
+  const localUserIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    meUserIdRef.current = meQuery.data?.user?.id;
-  }, [meQuery.data?.user?.id]);
+    localUserIdRef.current = auth.userId;
+  }, [auth.userId]);
 
   useEffect(() => {
     if (!roomId) return;
-    if (meQuery.isPending) return;
-    if (meQuery.isError || !meQuery.data?.user) {
-      const next = encodeURIComponent(`${location.pathname}${location.search}`);
-      navigate(`/login?next=${next}`);
+    if (auth.isPending) return;
+    if (auth.isError || !auth.userId) {
+      onAuthRequired();
       return;
     }
 
     let mounted = true;
-    const socket = getSocket();
 
     const ydoc = new Y.Doc();
     const ymap = getShapesRoot(ydoc);
@@ -82,87 +72,55 @@ export function useCollaboration(
 
     const onUpdate = (update: Uint8Array, origin: unknown) => {
       if (origin === ORIGIN_LOCAL) {
-        socket.emit('yjs:update', {
-          roomId,
-          update: uint8ToBase64(update),
-        });
+        emitYjsUpdateToRoom(roomId, uint8ToBase64(update));
         return;
       }
       replaceShapes(yMapToShapes(ymap));
     };
     ydoc.on('update', onUpdate);
 
-    const onRoomJoined = (payload: { usersOnline: number }) => {
-      setUsersOnline(payload.usersOnline || 1);
-    };
-
-    const onRoomUserJoined = (payload: { usersOnline: number }) => {
-      setUsersOnline(payload.usersOnline || 1);
-    };
-
-    const onRoomUserLeft = (payload: { usersOnline: number; user?: { id: string } }) => {
-      setUsersOnline(payload.usersOnline || 1);
-      const leftId = payload.user?.id;
-      if (leftId) {
-        setRemotePeers((prev) => prev.filter((p) => p.user.id !== leftId));
-      }
-    };
-
-    const onYjsSync = (payload: { roomId: string; update: string }) => {
-      if (payload.roomId !== roomId || !mounted) return;
-      Y.applyUpdate(ydoc, base64ToUint8(payload.update), 'socket-sync');
-      syncReadyRef.current = true;
-      setIsSynced(true);
-    };
-
-    const onYjsUpdate = (payload: { roomId: string; update: string }) => {
-      if (payload.roomId !== roomId || !mounted) return;
-      Y.applyUpdate(ydoc, base64ToUint8(payload.update), 'socket-remote');
-    };
-
-    const onAuthError = () => {
-      const next = encodeURIComponent(`${location.pathname}${location.search}`);
-      navigate(`/login?next=${next}`);
-    };
-
-    const onRoomError = (payload: { roomId: string }) => {
-      if (payload.roomId !== roomId || !mounted) return;
-      navigate('/dashboard', { replace: true });
-    };
-
-    const onAwarenessPeer = (payload: {
-      user: RemotePeerAwareness['user'];
-      at: number;
-      cursor?: { wx: number; wy: number; tool?: string } | null;
-      selectedId?: string | null;
-      tool?: string;
-    }) => {
-      if (!mounted) return;
-      if (payload.user.id === meUserIdRef.current) return;
-      setRemotePeers((prev) => {
-        const map = new Map(prev.map((p) => [p.user.id, p]));
-        const old = map.get(payload.user.id);
-        map.set(payload.user.id, mergePeer(old, payload));
-        return [...map.values()].sort((a, b) => a.user.id.localeCompare(b.user.id));
-      });
-    };
-
-    const onAwarenessLeft = (payload: { userId: string }) => {
-      if (!mounted) return;
-      setRemotePeers((prev) => prev.filter((p) => p.user.id !== payload.userId));
-    };
-
-    socket.on('room:joined', onRoomJoined);
-    socket.on('room:user-joined', onRoomUserJoined);
-    socket.on('room:user-left', onRoomUserLeft);
-    socket.on('yjs:sync', onYjsSync);
-    socket.on('yjs:update', onYjsUpdate);
-    socket.on('auth:error', onAuthError);
-    socket.on('awareness:peer', onAwarenessPeer);
-    socket.on('awareness:left', onAwarenessLeft);
-    socket.on('room:error', onRoomError);
-
-    socket.emit('room:join', { roomId });
+    const unsubscribeSocket = subscribeCanvasCollaborationSocket(roomId, {
+      onRoomJoined: (payload) => {
+        setUsersOnline(payload.usersOnline || 1);
+      },
+      onRoomUserJoined: (payload) => {
+        setUsersOnline(payload.usersOnline || 1);
+      },
+      onRoomUserLeft: (payload) => {
+        setUsersOnline(payload.usersOnline || 1);
+        const leftId = payload.user?.id;
+        if (leftId) {
+          setRemotePeers((prev) => prev.filter((p) => p.user.id !== leftId));
+        }
+      },
+      onYjsSync: (payload) => {
+        if (payload.roomId !== roomId || !mounted) return;
+        Y.applyUpdate(ydoc, base64ToUint8(payload.update), 'socket-sync');
+        syncReadyRef.current = true;
+        setIsSynced(true);
+      },
+      onYjsUpdate: (payload) => {
+        if (payload.roomId !== roomId || !mounted) return;
+        Y.applyUpdate(ydoc, base64ToUint8(payload.update), 'socket-remote');
+      },
+      onAuthError: () => {
+        onAuthRequired();
+      },
+      onRoomError: (payload) => {
+        if (payload.roomId !== roomId || !mounted) return;
+        onRoomInvalid();
+      },
+      onAwarenessPeer: (payload) => {
+        if (!mounted) return;
+        setRemotePeers((prev) =>
+          upsertRemotePeersAfterAwareness(prev, payload, localUserIdRef.current)
+        );
+      },
+      onAwarenessLeft: (payload) => {
+        if (!mounted) return;
+        setRemotePeers((prev) => prev.filter((p) => p.user.id !== payload.userId));
+      },
+    });
 
     return () => {
       mounted = false;
@@ -173,24 +131,14 @@ export function useCollaboration(
       ydoc.destroy();
       ydocRef.current = null;
       ymapRef.current = null;
-      socket.emit('room:leave', { roomId });
-      socket.off('room:joined', onRoomJoined);
-      socket.off('room:user-joined', onRoomUserJoined);
-      socket.off('room:user-left', onRoomUserLeft);
-      socket.off('yjs:sync', onYjsSync);
-      socket.off('yjs:update', onYjsUpdate);
-      socket.off('auth:error', onAuthError);
-      socket.off('awareness:peer', onAwarenessPeer);
-      socket.off('awareness:left', onAwarenessLeft);
-      socket.off('room:error', onRoomError);
+      unsubscribeSocket();
     };
   }, [
-    location.pathname,
-    location.search,
-    meQuery.data?.user,
-    meQuery.isError,
-    meQuery.isPending,
-    navigate,
+    auth.isError,
+    auth.isPending,
+    auth.userId,
+    onAuthRequired,
+    onRoomInvalid,
     replaceShapes,
     roomId,
   ]);
@@ -206,12 +154,8 @@ export function useCollaboration(
   }, [shapes, roomId]);
 
   const emitAwarenessPatch = useCallback(
-    (patch: {
-      cursor?: { wx: number; wy: number; tool?: string } | null;
-      selectedId?: string | null;
-      tool?: string;
-    }) => {
-      getSocket().emit('awareness:update', { roomId, ...patch });
+    (patch: AwarenessEmitPatch) => {
+      emitAwarenessUpdateToRoom(roomId, patch);
     },
     [roomId]
   );
@@ -219,7 +163,7 @@ export function useCollaboration(
   const emitCursorWorld = useCallback(
     (wx: number, wy: number, tool: string) => {
       const now = Date.now();
-      if (now - lastCursorEmitRef.current < CURSOR_EMIT_MS) return;
+      if (!shouldEmitCursor(now, lastCursorEmitRef.current, CURSOR_EMIT_MIN_INTERVAL_MS)) return;
       lastCursorEmitRef.current = now;
       emitAwarenessPatch({ cursor: { wx, wy, tool } });
     },
@@ -241,7 +185,7 @@ export function useCollaboration(
     roomId,
     usersOnline,
     isSynced,
-    localUserId: meQuery.data?.user?.id ?? '',
+    localUserId: auth.userId ?? '',
     remotePeers,
     emitCursorWorld,
     clearCursor,

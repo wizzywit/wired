@@ -2,15 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { redis } from "../lib/redis.js";
-
-type StoredUser = {
-  id: string;
-  email: string;
-  displayName: string;
-  passwordHash: string;
-  createdAt: string;
-};
+import { getUserByEmail, saveUser, type StoredUser } from "../lib/users.js";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -23,8 +15,6 @@ const loginSchema = z.object({
   password: z.string().min(8)
 });
 
-const USERS_BY_EMAIL_KEY = "wired:users:by-email";
-
 export const authRouter = Router();
 
 authRouter.post("/register", async (req, res) => {
@@ -34,7 +24,7 @@ authRouter.post("/register", async (req, res) => {
   }
 
   const email = payload.data.email.trim().toLowerCase();
-  const existing = await redis.hGet(USERS_BY_EMAIL_KEY, email);
+  const existing = await getUserByEmail(email);
   if (existing) {
     return res.status(409).json({ error: "Email is already registered." });
   }
@@ -51,7 +41,7 @@ authRouter.post("/register", async (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  await redis.hSet(USERS_BY_EMAIL_KEY, email, JSON.stringify(user));
+  await saveUser(user);
 
   req.session.user = { id: user.id, email: user.email, displayName: user.displayName };
   await new Promise<void>((resolve, reject) => {
@@ -71,12 +61,10 @@ authRouter.post("/login", async (req, res) => {
   }
 
   const email = payload.data.email.trim().toLowerCase();
-  const raw = await redis.hGet(USERS_BY_EMAIL_KEY, email);
-  if (!raw) {
+  const user = await getUserByEmail(email);
+  if (!user) {
     return res.status(401).json({ error: "Invalid email or password." });
   }
-
-  const user = JSON.parse(raw) as StoredUser;
   const validPassword = await bcrypt.compare(payload.data.password, user.passwordHash);
   if (!validPassword) {
     return res.status(401).json({ error: "Invalid email or password." });

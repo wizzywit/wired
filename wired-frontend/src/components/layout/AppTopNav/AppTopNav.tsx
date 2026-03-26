@@ -15,6 +15,9 @@ type AppTopNavProps = {
   trailing?: React.ReactNode;
   /** Presence avatars (e.g. canvas) */
   presence?: React.ReactNode;
+  showShareButton?: boolean;
+  onShareClick?: () => void;
+  shareDisabled?: boolean;
   variant?: 'default' | 'compact';
 };
 
@@ -22,6 +25,9 @@ export function AppTopNav({
   breadcrumb,
   onRenameBreadcrumb,
   showAppLinks = true,
+  showShareButton = true,
+  onShareClick,
+  shareDisabled = false,
   trailing,
   presence,
   variant = 'default',
@@ -100,9 +106,16 @@ export function AppTopNav({
 
       <div className="flex items-center gap-2 md:gap-4">
         {presence}
-        <Button variant="primary" className="hidden px-5 sm:inline-flex">
-          Share
-        </Button>
+        {showShareButton ? (
+          <Button
+            variant="primary"
+            className="hidden px-5 sm:inline-flex"
+            onClick={onShareClick}
+            disabled={shareDisabled || !onShareClick}
+          >
+            Share
+          </Button>
+        ) : null}
         <div className="flex items-center gap-1">
           <button
             type="button"

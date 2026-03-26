@@ -10,6 +10,7 @@ export default function RecentBoards({
   isDeleting,
   onOpen,
   onDelete,
+  canDeleteDocument,
   viewMode,
   onChangeViewMode,
   nowMs,
@@ -20,6 +21,7 @@ export default function RecentBoards({
   isDeleting: boolean;
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
+  canDeleteDocument: (doc: WireDocument) => boolean;
   viewMode: DashboardDocumentsViewMode;
   onChangeViewMode: (next: DashboardDocumentsViewMode) => void;
   nowMs: number;
@@ -63,7 +65,9 @@ export default function RecentBoards({
         </p>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {documents.map((r) => (
+          {documents.map((r) => {
+            const canDelete = canDeleteDocument(r);
+            return (
             <article
               key={r.id}
               className="group overflow-hidden rounded-2xl bg-surface-container-lowest shadow-card transition-all duration-300 hover:shadow-cardHover dark:bg-surface-container"
@@ -101,23 +105,28 @@ export default function RecentBoards({
                   >
                     <Icon name="open_in_new" className="text-lg" />
                   </button>
-                  <button
-                    type="button"
-                    disabled={isDeleting}
-                    className="rounded-md p-1 text-outline transition-colors enabled:hover:text-red-600 disabled:opacity-40"
-                    aria-label={`Delete ${r.title}`}
-                    onClick={() => onDelete(r.id)}
-                  >
-                    <Icon name="delete" className="text-lg" />
-                  </button>
+                  {canDelete ? (
+                    <button
+                      type="button"
+                      disabled={isDeleting}
+                      className="rounded-md p-1 text-outline transition-colors enabled:hover:text-red-600 disabled:opacity-40"
+                      aria-label={`Delete ${r.title}`}
+                      onClick={() => onDelete(r.id)}
+                    >
+                      <Icon name="delete" className="text-lg" />
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="space-y-3">
-          {documents.map((r) => (
+          {documents.map((r) => {
+            const canDelete = canDeleteDocument(r);
+            return (
             <article
               key={r.id}
               className="flex items-center justify-between gap-3 rounded-xl bg-surface-container-lowest p-3 dark:bg-surface-container"
@@ -132,17 +141,20 @@ export default function RecentBoards({
                   {formatDocumentEditedLabel(r.updatedAt, nowMs)}
                 </p>
               </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                className="rounded-md p-1 text-outline transition-colors enabled:hover:text-red-600 disabled:opacity-40"
-                aria-label={`Delete ${r.title}`}
-                onClick={() => onDelete(r.id)}
-              >
-                <Icon name="delete" className="text-lg" />
-              </button>
+              {canDelete ? (
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  className="rounded-md p-1 text-outline transition-colors enabled:hover:text-red-600 disabled:opacity-40"
+                  aria-label={`Delete ${r.title}`}
+                  onClick={() => onDelete(r.id)}
+                >
+                  <Icon name="delete" className="text-lg" />
+                </button>
+              ) : null}
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

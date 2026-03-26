@@ -2,7 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import type { RequestHandler } from "express";
 import { Server } from "socket.io";
 import { env } from "../config/env.js";
-import { documentExists } from "../lib/documents.js";
+import { canUserAccessDocument, canUserEditDocument, documentExists } from "../lib/documents.js";
 import { setCollaborationIo } from "./runtime.js";
 import {
   applyIncomingClientUpdate,
@@ -44,6 +44,11 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
       if (!roomId?.trim()) return;
       if (!(await documentExists(roomId))) {
         socket.emit("room:error", { roomId, message: "Document not found." });
+        return;
+      }
+      const canAccess = await canUserAccessDocument(roomId, user.id);
+      if (!canAccess) {
+        socket.emit("room:error", { roomId, message: "You do not have access to this document." });
         return;
       }
       await socket.join(roomId);
@@ -88,6 +93,7 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
         void socket.leave(roomId);
         return;
       }
+      if (!(await canUserEditDocument(roomId, user.id))) return;
       applyIncomingClientUpdate(roomId, update);
       socket.to(roomId).emit("yjs:update", {
         roomId,
@@ -111,6 +117,7 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
           void socket.leave(roomId);
           return;
         }
+        if (!(await canUserAccessDocument(roomId, user.id))) return;
         const payload: Record<string, unknown> = {
           user,
           at: Date.now()

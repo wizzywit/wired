@@ -27,9 +27,12 @@ export default function DashboardScreen() {
     cancelDeleteDocument,
     confirmDeleteDocument,
     pendingDeleteDocument,
+    currentUserId,
     documentsViewMode,
     setDocumentsViewMode,
   } = useDashboardScreenUseCase();
+  const canDeleteDocument = (doc: (typeof documents)[number]) =>
+    doc.canDelete ?? doc.ownerId === currentUserId;
 
   if (viewState === 'loading') {
     return (
@@ -41,7 +44,7 @@ export default function DashboardScreen() {
 
   return (
     <div className="min-h-dvh bg-background pb-32 md:pb-12">
-      <AppTopNav />
+      <AppTopNav showShareButton={false} />
       <FloatingToolbar />
       {searchParams.get('notice') === 'document-unavailable' ? (
         <div className="mx-auto mt-16 w-full max-w-7xl px-6 md:px-8">
@@ -77,6 +80,7 @@ export default function DashboardScreen() {
               isDeleting={deletePending}
               onOpen={openDocument}
               onDelete={requestDeleteDocument}
+              canDeleteDocument={canDeleteDocument}
               viewMode={documentsViewMode}
               onChangeViewMode={setDocumentsViewMode}
               nowMs={nowMs}
@@ -145,15 +149,17 @@ export default function DashboardScreen() {
                     <span className="p-2 text-slate-400" aria-hidden>
                       <Icon name="chevron_right" size="sm" />
                     </span>
-                    <button
-                      type="button"
-                      disabled={deletePending}
-                      onClick={() => requestDeleteDocument(r.id)}
-                      className="rounded-md p-2 text-slate-400 transition-colors enabled:hover:text-red-600 disabled:opacity-40"
-                      aria-label={`Delete ${r.title}`}
-                    >
-                      <Icon name="delete" size="sm" />
-                    </button>
+                    {canDeleteDocument(r) ? (
+                      <button
+                        type="button"
+                        disabled={deletePending}
+                        onClick={() => requestDeleteDocument(r.id)}
+                        className="rounded-md p-2 text-slate-400 transition-colors enabled:hover:text-red-600 disabled:opacity-40"
+                        aria-label={`Delete ${r.title}`}
+                      >
+                        <Icon name="delete" size="sm" />
+                      </button>
+                    ) : null}
                   </div>
                 </article>
               ))

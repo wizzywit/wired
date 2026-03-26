@@ -19,8 +19,10 @@ export type KonvaCanvasCollaborationProps = {
 
 export function KonvaCanvas({
   collaboration,
+  readOnly = false,
 }: {
   collaboration?: KonvaCanvasCollaborationProps | null;
+  readOnly?: boolean;
 } = {}) {
   const {
     containerRef,
@@ -57,8 +59,9 @@ export function KonvaCanvas({
       ? {
           onPointerWorldMove: collaboration.onPointerWorldMove,
           onStageMouseLeaveExtra: collaboration.onStageMouseLeaveExtra,
+          readOnly,
         }
-      : undefined
+      : { readOnly }
   );
 
   return (
@@ -96,15 +99,21 @@ export function KonvaCanvas({
                 key={s.id}
                 shape={s}
                 interaction={{
-                  interactive: tool === 'select',
+                  interactive: tool === 'select' && !readOnly,
                   onSelect: () => setSelectedId(s.id),
-                  onChange: (next) => updateShape(s.id, next),
+                  onChange: (next) => {
+                    if (readOnly) return;
+                    updateShape(s.id, next);
+                  },
                   innerRef: (node) => {
                     if (node) shapeRefs.current.set(s.id, node);
                     else shapeRefs.current.delete(s.id);
                   },
-                  isEditing: editingId === s.id,
-                  onBeginEdit: () => setEditingId(s.id),
+                  isEditing: !readOnly && editingId === s.id,
+                  onBeginEdit: () => {
+                    if (readOnly) return;
+                    setEditingId(s.id);
+                  },
                 }}
               />
             ))}
@@ -120,6 +129,7 @@ export function KonvaCanvas({
 
             <Transformer
               ref={transformerRef}
+              visible={!readOnly}
               rotateEnabled
               borderStroke="#2962ff"
               borderStrokeWidth={1}
@@ -136,7 +146,7 @@ export function KonvaCanvas({
       </Stage>
 
       <CanvasTextEditOverlay
-        editingId={editingId}
+        editingId={readOnly ? null : editingId}
         shapes={shapes}
         updateShape={updateShape}
         onClose={() => setEditingId(null)}
@@ -150,7 +160,7 @@ export function KonvaCanvas({
         selectedId={selectedId}
         shapes={shapes}
         updateShape={updateShape}
-        hidden={editingId !== null || tool !== 'select'}
+        hidden={readOnly || editingId !== null || tool !== 'select'}
         stageRef={stageRef}
         shapeRefs={shapeRefs}
       />

@@ -58,5 +58,6 @@ export function useCanvasGateUseCase() {
     documentId,
     documentTitle: docQuery.data?.title ?? '',
     documentOwnerId: docQuery.data?.ownerId ?? '',
+    documentCanEdit: docQuery.data?.canEdit ?? true,
   };
 }

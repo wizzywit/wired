@@ -1,18 +1,22 @@
+import { useState } from 'react';
 import { colorForUserId, initialsFromAwarenessUser, KonvaCanvas } from './canvas';
 import { AppTopNav } from '../components/layout/AppTopNav/AppTopNav';
 import { FloatingToolbar } from '../components/layout/FloatingToolbar/FloatingToolbar';
 import { Icon } from '../components/common/Icon';
 import { presenceGlowStyle } from './canvasScreenLogic';
 import { useCanvasScreenInnerUseCase } from './useCanvasScreenInnerUseCase';
+import { ShareDialog } from '../share';
 
 export default function CanvasScreenInner({
   documentId,
   documentTitle,
   documentOwnerId,
+  canEdit,
 }: {
   documentId: string;
   documentTitle: string;
   documentOwnerId: string;
+  canEdit: boolean;
 }) {
   const {
     canUndo,
@@ -27,12 +31,14 @@ export default function CanvasScreenInner({
     handleRenameBreadcrumb,
     collaboration,
   } = useCanvasScreenInnerUseCase({ documentId });
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <div className="h-dvh overflow-hidden bg-background font-body text-on-background">
       <AppTopNav
         breadcrumb={documentTitle}
         onRenameBreadcrumb={localUserId === documentOwnerId ? handleRenameBreadcrumb : undefined}
+        onShareClick={() => setShareOpen(true)}
         presence={
           <div className="mr-2 hidden items-center sm:flex" title={isSynced ? `${usersOnline} online` : 'Connecting…'}>
             <div className="-space-x-2 flex">
@@ -58,11 +64,17 @@ export default function CanvasScreenInner({
           </div>
         }
       />
+      <ShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        documentId={documentId}
+        documentTitle={documentTitle}
+      />
 
-      <FloatingToolbar variant="canvas" />
+      {canEdit ? <FloatingToolbar variant="canvas" /> : null}
 
-      <main className="relative ml-0 mt-14 h-[calc(100dvh-3.5rem)] w-full overflow-hidden md:ml-20">
-        <KonvaCanvas collaboration={collaboration} />
+      <main className={`relative ml-0 mt-14 h-[calc(100dvh-3.5rem)] w-full overflow-hidden ${canEdit ? 'md:ml-20' : ''}`}>
+        <KonvaCanvas collaboration={collaboration} readOnly={!canEdit} />
       </main>
 
       <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-white/85 p-1.5 shadow-lg backdrop-blur-xl dark:bg-slate-900/85">

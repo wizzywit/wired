@@ -2,7 +2,7 @@ import CanvasScreenInner from './CanvasScreenInner';
 import { useCanvasGateUseCase } from './useCanvasGateUseCase';
 
 export default function CanvasGate() {
-  const { viewState, documentId, documentTitle, documentOwnerId } = useCanvasGateUseCase();
+  const { viewState, documentId, documentTitle, documentOwnerId, documentCanEdit } = useCanvasGateUseCase();
 
   if (viewState === 'redirecting') {
     return (
@@ -25,6 +25,7 @@ export default function CanvasGate() {
       documentId={documentId}
       documentTitle={documentTitle}
       documentOwnerId={documentOwnerId}
+      canEdit={documentCanEdit}
     />
   );
 }

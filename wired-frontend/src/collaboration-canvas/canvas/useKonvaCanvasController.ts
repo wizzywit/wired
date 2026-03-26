@@ -14,6 +14,7 @@ import { useKonvaCanvasPointerHandlers } from './useKonvaCanvasPointerHandlers';
 export type KonvaCanvasControllerOptions = {
   onPointerWorldMove?: (pt: { x: number; y: number }) => void;
   onStageMouseLeaveExtra?: () => void;
+  readOnly?: boolean;
 };
 
 export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
@@ -26,6 +27,7 @@ export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
   }, [opts?.onPointerWorldMove, opts?.onStageMouseLeaveExtra]);
 
   const { theme } = useTheme();
+  const readOnly = Boolean(opts?.readOnly);
   const tool = useCanvasStore((state) => state.tool);
   const setTool = useCanvasStore((state) => state.setTool);
   const shapes = useCanvasStore((state) => state.history.present);
@@ -38,6 +40,16 @@ export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
   const setEditingId = useCanvasStore((state) => state.setEditingId);
   const stickyColor = useCanvasStore((state) => state.stickyColor);
   const stickyTextColor = useCanvasStore((state) => state.stickyTextColor);
+
+  useEffect(() => {
+    if (!readOnly) return;
+    if (tool !== 'select') {
+      setTool('select');
+    }
+    if (editingId !== null) {
+      setEditingId(null);
+    }
+  }, [editingId, readOnly, setEditingId, setTool, tool]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<KonvaStage | null>(null);
@@ -102,7 +114,7 @@ export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
     editingId,
     setEditingId,
     setSelectedId,
-    removeShape,
+    removeShape: readOnly ? () => {} : removeShape,
     transformerRef,
     shapeRefs,
     emptyBgPanRef,
@@ -113,7 +125,7 @@ export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
     handleMouseMove: pointerMouseMove,
     cursorClass,
   } = useKonvaCanvasPointerHandlers({
-    tool,
+    tool: readOnly ? 'select' : tool,
     spaceDown,
     isPanning,
     handleDrawMouseDown,

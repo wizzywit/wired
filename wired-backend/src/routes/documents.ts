@@ -2,11 +2,13 @@ import { Router } from "express";
 import { z } from "zod";
 import {
   createDocument,
+  deleteDocumentForOwner,
   getDocumentById,
   listDocumentsForUser,
   updateDocumentForOwner,
   type StoredDocument
 } from "../lib/documents.js";
+import { getCollaborationIo } from "../socket/runtime.js";
 
 export const documentsRouter = Router();
 
@@ -86,4 +88,24 @@ documentsRouter.patch("/:id", async (req, res) => {
     return res.status(404).json({ error: "Document not found." });
   }
   return res.status(200).json({ document: publicDoc(updated) });
+});
+
+documentsRouter.delete("/:id", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  const id = req.params.id?.trim();
+  if (!id) {
+    return res.status(400).json({ error: "Missing document id." });
+  }
+  const deleted = await deleteDocumentForOwner(id, req.session.user.id);
+  if (!deleted) {
+    const existing = await getDocumentById(id);
+    if (existing && existing.ownerId !== req.session.user.id) {
+      return res.status(403).json({ error: "You can only delete documents you own." });
+    }
+    return res.status(404).json({ error: "Document not found." });
+  }
+  getCollaborationIo()?.to(id).emit("room:deleted", { roomId: id });
+  return res.status(204).send();
 });

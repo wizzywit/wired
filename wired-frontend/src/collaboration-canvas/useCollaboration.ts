@@ -110,6 +110,10 @@ export function useCollaboration(options: {
         if (payload.roomId !== roomId || !mounted) return;
         onRoomInvalid();
       },
+      onRoomDeleted: (payload) => {
+        if (payload.roomId !== roomId || !mounted) return;
+        onRoomInvalid();
+      },
       onAwarenessPeer: (payload) => {
         if (!mounted) return;
         setRemotePeers((prev) =>

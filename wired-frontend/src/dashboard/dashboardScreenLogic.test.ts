@@ -3,6 +3,7 @@ import {
   buildCanvasPathForDocumentId,
   DASHBOARD_LOGIN_NEXT_ENCODED,
   formatDocumentEditedLabel,
+  normalizeDocumentsViewMode,
   resolveDashboardViewState,
 } from './dashboardScreenLogic';
 
@@ -52,6 +53,17 @@ describe('buildCanvasPathForDocumentId', () => {
 describe('DASHBOARD_LOGIN_NEXT_ENCODED', () => {
   it('matches encoded /dashboard', () => {
     expect(DASHBOARD_LOGIN_NEXT_ENCODED).toBe('%2Fdashboard');
+  });
+});
+
+describe('normalizeDocumentsViewMode', () => {
+  it('defaults to grid when undefined', () => {
+    expect(normalizeDocumentsViewMode(undefined)).toBe('grid');
+  });
+
+  it('keeps list and grid values', () => {
+    expect(normalizeDocumentsViewMode('list')).toBe('list');
+    expect(normalizeDocumentsViewMode('grid')).toBe('grid');
   });
 });
 

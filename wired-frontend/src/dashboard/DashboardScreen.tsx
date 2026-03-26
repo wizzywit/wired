@@ -3,6 +3,7 @@ import { FloatingToolbar } from '../components/layout/FloatingToolbar/FloatingTo
 import { MobileBottomNav } from '../components/layout/MobileBottomNav';
 import { Icon } from '../components/common/Icon';
 import { SearchField } from '../components/common/SearchField';
+import { useSearchParams } from 'react-router-dom';
 import MobileTemplatePreview from './MobileTemplatePreview';
 import RecentBoards from './RecentBoards';
 import TemplateStrip from './TemplateStrip';
@@ -12,9 +13,23 @@ import { formatDocumentEditedLabel } from './dashboardScreenLogic';
 import { useDashboardScreenUseCase } from './useDashboardScreenUseCase';
 
 export default function DashboardScreen() {
+  const [searchParams] = useSearchParams();
   const nowMs = useNowMs();
-  const { viewState, documents, docsQueryPending, createPending, handleCreate, openDocument } =
-    useDashboardScreenUseCase();
+  const {
+    viewState,
+    documents,
+    docsQueryPending,
+    createPending,
+    deletePending,
+    handleCreate,
+    openDocument,
+    requestDeleteDocument,
+    cancelDeleteDocument,
+    confirmDeleteDocument,
+    pendingDeleteDocument,
+    documentsViewMode,
+    setDocumentsViewMode,
+  } = useDashboardScreenUseCase();
 
   if (viewState === 'loading') {
     return (
@@ -28,6 +43,13 @@ export default function DashboardScreen() {
     <div className="min-h-dvh bg-background pb-32 md:pb-12">
       <AppTopNav />
       <FloatingToolbar />
+      {searchParams.get('notice') === 'document-unavailable' ? (
+        <div className="mx-auto mt-16 w-full max-w-7xl px-6 md:px-8">
+          <div className="rounded-xl border border-amber-400/30 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-100">
+            This document is no longer available. It may have been deleted by the owner.
+          </div>
+        </div>
+      ) : null}
 
       {/* Desktop main */}
       <main className="hidden min-h-screen pt-14 md:ml-24 md:block md:px-8 md:pb-12">
@@ -52,7 +74,11 @@ export default function DashboardScreen() {
               className="lg:col-span-9"
               documents={documents}
               isLoading={docsQueryPending}
+              isDeleting={deletePending}
               onOpen={openDocument}
+              onDelete={requestDeleteDocument}
+              viewMode={documentsViewMode}
+              onChangeViewMode={setDocumentsViewMode}
               nowMs={nowMs}
             />
           </div>
@@ -95,10 +121,8 @@ export default function DashboardScreen() {
               <p className="text-sm text-on-surface-variant">No documents yet. Tap Create New to start.</p>
             ) : (
               documents.map((r) => (
-                <button
+                <article
                   key={r.id}
-                  type="button"
-                  onClick={() => openDocument(r.id)}
                   className="flex w-full cursor-pointer items-center gap-4 rounded-xl bg-surface-container-lowest p-3 text-left shadow-sm transition-all active:scale-[0.98] dark:bg-surface-container"
                 >
                   <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
@@ -107,16 +131,31 @@ export default function DashboardScreen() {
                       <div className="h-2 w-2/3 rounded-full bg-primary/20" />
                     </div>
                   </div>
-                  <div className="min-w-0 flex-grow">
+                  <button
+                    type="button"
+                    onClick={() => openDocument(r.id)}
+                    className="min-w-0 flex-grow text-left"
+                  >
                     <h3 className="truncate text-sm font-bold text-on-surface">{r.title}</h3>
                     <p className="mt-0.5 text-[11px] font-medium text-on-surface-variant">
                       {formatDocumentEditedLabel(r.updatedAt, nowMs)}
                     </p>
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <span className="p-2 text-slate-400" aria-hidden>
+                      <Icon name="chevron_right" size="sm" />
+                    </span>
+                    <button
+                      type="button"
+                      disabled={deletePending}
+                      onClick={() => requestDeleteDocument(r.id)}
+                      className="rounded-md p-2 text-slate-400 transition-colors enabled:hover:text-red-600 disabled:opacity-40"
+                      aria-label={`Delete ${r.title}`}
+                    >
+                      <Icon name="delete" size="sm" />
+                    </button>
                   </div>
-                  <span className="p-2 text-slate-400" aria-hidden>
-                    <Icon name="chevron_right" size="sm" />
-                  </span>
-                </button>
+                </article>
               ))
             )}
           </div>
@@ -134,6 +173,35 @@ export default function DashboardScreen() {
       >
         <Icon name="add" filled className="text-2xl text-white" />
       </button>
+
+      {pendingDeleteDocument ? (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl dark:bg-surface-container">
+            <h3 className="text-lg font-bold text-on-surface">Delete document?</h3>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              This will permanently remove <strong>{pendingDeleteDocument.title}</strong> and its canvas data.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={cancelDeleteDocument}
+                className="rounded-md px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-surface-container-high"
+                disabled={deletePending}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmDeleteDocument()}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                disabled={deletePending}
+              >
+                {deletePending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

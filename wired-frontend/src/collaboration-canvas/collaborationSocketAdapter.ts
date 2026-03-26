@@ -10,6 +10,7 @@ export type YjsRoomUpdatePayload = { roomId: string; update: string };
 export type AwarenessLeftPayload = { userId: string };
 
 export type RoomErrorPayload = { roomId: string };
+export type RoomDeletedPayload = { roomId: string };
 
 export type CollaborationSocketHandlers = {
   onRoomJoined: (payload: RoomUsersPayload) => void;
@@ -21,6 +22,7 @@ export type CollaborationSocketHandlers = {
   onAwarenessPeer: (payload: AwarenessMergePayload) => void;
   onAwarenessLeft: (payload: AwarenessLeftPayload) => void;
   onRoomError: (payload: RoomErrorPayload) => void;
+  onRoomDeleted: (payload: RoomDeletedPayload) => void;
 };
 
 export type AwarenessEmitPatch = {
@@ -48,6 +50,7 @@ export function subscribeCanvasCollaborationSocket(
   socket.on('awareness:peer', handlers.onAwarenessPeer);
   socket.on('awareness:left', handlers.onAwarenessLeft);
   socket.on('room:error', handlers.onRoomError);
+  socket.on('room:deleted', handlers.onRoomDeleted);
 
   socket.emit('room:join', { roomId });
 
@@ -62,6 +65,7 @@ export function subscribeCanvasCollaborationSocket(
     socket.off('awareness:peer', handlers.onAwarenessPeer);
     socket.off('awareness:left', handlers.onAwarenessLeft);
     socket.off('room:error', handlers.onRoomError);
+    socket.off('room:deleted', handlers.onRoomDeleted);
   };
 }
 

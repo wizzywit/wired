@@ -13,3 +13,9 @@ export async function createDocument(input?: { title?: string }) {
     body: JSON.stringify(input ?? {}),
   });
 }
+
+export async function deleteDocument(documentId: string) {
+  return apiRequest<void>(`/documents/${encodeURIComponent(documentId)}`, {
+    method: 'DELETE',
+  });
+}

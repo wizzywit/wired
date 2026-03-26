@@ -11,6 +11,8 @@ export type StoredDocument = {
 
 const docKey = (id: string) => `wired:doc:${id}`;
 const userDocsKey = (userId: string) => `wired:user:${userId}:documents`;
+const roomYjsKey = (roomId: string) => `wired:rooms:${roomId}:yjs`;
+const roomLegacyStateKey = (roomId: string) => `wired:rooms:${roomId}:state`;
 
 export async function createDocument(ownerId: string, title?: string): Promise<StoredDocument> {
   const id = randomUUID();
@@ -94,4 +96,25 @@ export async function updateDocumentForOwner(
   await redis.set(docKey(id), JSON.stringify(doc));
   await redis.zAdd(userDocsKey(doc.ownerId), { score: Date.now(), value: id });
   return doc;
+}
+
+/** Deletes owned document and related persisted room state. */
+export async function deleteDocumentForOwner(id: string, ownerId: string): Promise<boolean> {
+  const raw = await redis.get(docKey(id));
+  if (!raw) return false;
+  let doc: StoredDocument;
+  try {
+    doc = JSON.parse(raw) as StoredDocument;
+  } catch {
+    return false;
+  }
+  if (doc.ownerId !== ownerId) return false;
+
+  await Promise.all([
+    redis.del(docKey(id)),
+    redis.zRem(userDocsKey(ownerId), id),
+    redis.del(roomYjsKey(id)),
+    redis.del(roomLegacyStateKey(id))
+  ]);
+  return true;
 }

@@ -2,6 +2,7 @@
 export const DASHBOARD_LOGIN_NEXT_ENCODED = encodeURIComponent('/dashboard');
 
 export type DashboardViewState = 'loading' | 'ready';
+export type DashboardDocumentsViewMode = 'grid' | 'list';
 
 export function resolveDashboardViewState(input: {
   mePending: boolean;
@@ -31,4 +32,10 @@ export function formatDocumentEditedLabel(iso: string, nowMs: number): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 48) return `Edited ${hrs}h ago`;
   return `Edited ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+}
+
+export function normalizeDocumentsViewMode(
+  viewMode: DashboardDocumentsViewMode | undefined
+): DashboardDocumentsViewMode {
+  return viewMode === 'list' ? 'list' : 'grid';
 }

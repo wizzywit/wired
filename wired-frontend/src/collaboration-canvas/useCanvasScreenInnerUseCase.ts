@@ -27,7 +27,7 @@ export function useCanvasScreenInnerUseCase({ documentId }: { documentId: string
   }, [navigate, location.pathname, location.search]);
 
   const onRoomInvalid = useCallback(() => {
-    navigate('/dashboard', { replace: true });
+    navigate('/dashboard?notice=document-unavailable', { replace: true });
   }, [navigate]);
 
   const { usersOnline, isSynced, localUserId, remotePeers, emitCursorWorld, clearCursor, emitSelectionTool } =

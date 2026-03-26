@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeQuery } from '../hooks';
-import { useCreateDocumentMutation, useDocumentsQuery } from './useDashboard';
+import { useCreateDocumentMutation, useDeleteDocumentMutation, useDocumentsQuery } from './useDashboard';
 import { type WireDocument } from '../domain-types';
 import {
   buildCanvasPathForDocumentId,
   DASHBOARD_LOGIN_NEXT_ENCODED,
+  normalizeDocumentsViewMode,
   resolveDashboardViewState,
 } from './dashboardScreenLogic';
 
@@ -14,6 +15,9 @@ export function useDashboardScreenUseCase() {
   const meQuery = useMeQuery();
   const docsQuery = useDocumentsQuery(Boolean(meQuery.data?.user));
   const createMutation = useCreateDocumentMutation();
+  const deleteMutation = useDeleteDocumentMutation();
+  const [documentsViewMode, setDocumentsViewMode] = useState<'grid' | 'list'>('grid');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (meQuery.isPending) return;
@@ -38,6 +42,20 @@ export function useDashboardScreenUseCase() {
     [navigate]
   );
 
+  const requestDeleteDocument = useCallback((id: string) => {
+    setPendingDeleteId(id);
+  }, []);
+
+  const cancelDeleteDocument = useCallback(() => {
+    setPendingDeleteId(null);
+  }, []);
+
+  const confirmDeleteDocument = useCallback(async () => {
+    if (!pendingDeleteId) return;
+    await deleteMutation.mutateAsync(pendingDeleteId);
+    setPendingDeleteId(null);
+  }, [deleteMutation, pendingDeleteId]);
+
   const viewState = useMemo(
     () =>
       resolveDashboardViewState({
@@ -49,13 +67,28 @@ export function useDashboardScreenUseCase() {
   );
 
   const documents: WireDocument[] = useMemo(() => docsQuery.data ?? [], [docsQuery.data]);
+  const pendingDeleteDocument = useMemo(
+    () => documents.find((doc) => doc.id === pendingDeleteId) ?? null,
+    [documents, pendingDeleteId]
+  );
+  const normalizedDocumentsViewMode = useMemo(
+    () => normalizeDocumentsViewMode(documentsViewMode),
+    [documentsViewMode]
+  );
 
   return {
     viewState,
     documents,
     docsQueryPending: docsQuery.isPending,
     createPending: createMutation.isPending,
+    deletePending: deleteMutation.isPending,
     handleCreate,
     openDocument,
+    requestDeleteDocument,
+    cancelDeleteDocument,
+    confirmDeleteDocument,
+    pendingDeleteDocument,
+    documentsViewMode: normalizedDocumentsViewMode,
+    setDocumentsViewMode,
   };
 }

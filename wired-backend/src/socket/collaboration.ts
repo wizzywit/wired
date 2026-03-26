@@ -3,6 +3,7 @@ import type { RequestHandler } from "express";
 import { Server } from "socket.io";
 import { env } from "../config/env.js";
 import { documentExists } from "../lib/documents.js";
+import { setCollaborationIo } from "./runtime.js";
 import {
   applyIncomingClientUpdate,
   encodeDocAsBase64,
@@ -19,6 +20,7 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
   });
 
   io.engine.use(sessionMiddleware);
+  setCollaborationIo(io);
 
   io.on("connection", (socket) => {
     const req = socket.request as typeof socket.request & {
@@ -81,7 +83,11 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
 
     socket.on("yjs:update", async ({ roomId, update }: { roomId: string; update: string }) => {
       if (!roomId?.trim() || typeof update !== "string") return;
-      if (!(await documentExists(roomId))) return;
+      if (!(await documentExists(roomId))) {
+        socket.emit("room:deleted", { roomId });
+        void socket.leave(roomId);
+        return;
+      }
       applyIncomingClientUpdate(roomId, update);
       socket.to(roomId).emit("yjs:update", {
         roomId,
@@ -100,7 +106,11 @@ export function buildCollaborationServer(httpServer: HttpServer, sessionMiddlewa
       }) => {
         const roomId = raw?.roomId?.trim();
         if (!roomId) return;
-        if (!(await documentExists(roomId))) return;
+        if (!(await documentExists(roomId))) {
+          socket.emit("room:deleted", { roomId });
+          void socket.leave(roomId);
+          return;
+        }
         const payload: Record<string, unknown> = {
           user,
           at: Date.now()

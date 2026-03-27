@@ -14,9 +14,9 @@ import type { LinkAccess } from './shareTypes';
 const documentShareQueryKey = (documentId: string) => ['documents', documentId, 'share'] as const;
 
 function invalidateShareRelatedQueries(documentId: string) {
-  void queryClient.invalidateQueries({ queryKey: documentShareQueryKey(documentId) });
-  void queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
-  void queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
+  queryClient.invalidateQueries({ queryKey: documentShareQueryKey(documentId) });
+  queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
+  queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
 }
 
 export function useDocumentShareQuery(documentId: string, enabled = true) {
@@ -33,8 +33,7 @@ export function useDocumentShareQuery(documentId: string, enabled = true) {
 
 export function useInviteDocumentCollaboratorMutation(documentId: string) {
   return useMutation({
-    mutationFn: (vars: { email: string; role: 'editor' | 'viewer' }) =>
-      inviteDocumentCollaborator(documentId, vars),
+    mutationFn: (vars: { email: string; role: 'editor' | 'viewer' }) => inviteDocumentCollaborator(documentId, vars),
     onSuccess: () => invalidateShareRelatedQueries(documentId),
   });
 }

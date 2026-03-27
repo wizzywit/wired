@@ -15,7 +15,7 @@ export async function createDocument(input?: { title?: string; initialYjsBase64?
 }
 
 export async function deleteDocument(documentId: string) {
-  return apiRequest<void>(`/documents/${encodeURIComponent(documentId)}`, {
+  return apiRequest(`/documents/${encodeURIComponent(documentId)}`, {
     method: 'DELETE',
   });
 }

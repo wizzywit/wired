@@ -124,7 +124,7 @@ export function ShareDialog({
             />
             <button
               type="button"
-              onClick={() => void submitInvite()}
+              onClick={() => submitInvite()}
               disabled={!canShare || isBusy || inviteEmail.trim() === ''}
               className="action-gradient h-12 whitespace-nowrap rounded-xl px-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 disabled:opacity-50"
             >
@@ -150,49 +150,45 @@ export function ShareDialog({
             <>
               {share?.users.map((u) => {
                 const isSelfInvitedCollaborator =
-                  Boolean(share?.meUserId) &&
-                  u.userId === share?.meUserId &&
-                  share?.meRole !== 'owner';
+                  Boolean(share?.meUserId) && u.userId === share?.meUserId && share?.meRole !== 'owner';
                 return (
-                <div key={u.userId} className="flex items-center justify-between">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                      {initialsFromNameOrEmail(u.displayName, u.email)}
+                  <div key={u.userId} className="flex items-center justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                        {initialsFromNameOrEmail(u.displayName, u.email)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold leading-tight text-on-surface">{u.displayName}</p>
+                        <p className="truncate text-xs text-on-surface-variant">{u.email}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold leading-tight text-on-surface">
-                        {u.displayName}
-                      </p>
-                      <p className="truncate text-xs text-on-surface-variant">{u.email}</p>
-                    </div>
+                    {u.role === 'owner' ? (
+                      <span className="px-3 text-xs font-medium text-on-surface-variant/60">Owner</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <SelectMenu
+                          value={u.role}
+                          onChange={(next) => changeUserRole(u.userId, next)}
+                          disabled={!canShare || isBusy || isSelfInvitedCollaborator}
+                          className="h-9 min-w-[6.75rem]"
+                          menuPlacement="top"
+                          options={[
+                            { value: 'viewer', label: 'Viewer' },
+                            { value: 'editor', label: 'Editor' },
+                          ]}
+                        />
+                        <button
+                          type="button"
+                          disabled={!canShare || isBusy || isSelfInvitedCollaborator}
+                          onClick={() => removeUser(u.userId)}
+                          className="rounded-md p-1 text-on-surface-variant hover:text-red-600 disabled:opacity-50"
+                          aria-label={`Remove ${u.displayName}`}
+                        >
+                          <Icon name="delete" size="sm" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  {u.role === 'owner' ? (
-                    <span className="px-3 text-xs font-medium text-on-surface-variant/60">Owner</span>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <SelectMenu
-                        value={u.role}
-                        onChange={(next) => void changeUserRole(u.userId, next)}
-                        disabled={!canShare || isBusy || isSelfInvitedCollaborator}
-                        className="h-9 min-w-[6.75rem]"
-                        menuPlacement="top"
-                        options={[
-                          { value: 'viewer', label: 'Viewer' },
-                          { value: 'editor', label: 'Editor' },
-                        ]}
-                      />
-                      <button
-                        type="button"
-                        disabled={!canShare || isBusy || isSelfInvitedCollaborator}
-                        onClick={() => void removeUser(u.userId)}
-                        className="rounded-md p-1 text-on-surface-variant hover:text-red-600 disabled:opacity-50"
-                        aria-label={`Remove ${u.displayName}`}
-                      >
-                        <Icon name="delete" size="sm" />
-                      </button>
-                    </div>
-                  )}
-                </div>
                 );
               })}
               {share?.invites?.length ? (
@@ -205,14 +201,12 @@ export function ShareDialog({
                       <div key={invite.email} className="flex items-center justify-between gap-2">
                         <span className="truncate text-xs text-on-surface-variant">{invite.email}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium uppercase text-on-surface-variant">
-                            {invite.role}
-                          </span>
+                          <span className="text-xs font-medium uppercase text-on-surface-variant">{invite.role}</span>
                           {canShare ? (
                             <button
                               type="button"
                               className="rounded-md p-1 text-on-surface-variant transition-colors hover:text-red-600"
-                              onClick={() => void revokeInvite(invite.email)}
+                              onClick={() => revokeInvite(invite.email)}
                               aria-label={`Revoke invite for ${invite.email}`}
                             >
                               <Icon name="close" size="sm" />
@@ -248,7 +242,7 @@ export function ShareDialog({
             </div>
             <SelectMenu
               value={linkAccess}
-              onChange={(next) => void changeLinkAccess(next)}
+              onChange={changeLinkAccess}
               disabled={!canShare || isBusy}
               className="h-9 min-w-[8rem]"
               options={[
@@ -266,7 +260,7 @@ export function ShareDialog({
             <button
               type="button"
               className="flex h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-surface-container-highest px-5 text-sm font-semibold text-on-surface transition-all hover:bg-surface-container-high active:scale-95"
-              onClick={() => void copyShareUrl()}
+              onClick={copyShareUrl}
             >
               <Icon name="content_copy" className="text-[18px]" />
               {copySuccess ? 'Copied' : 'Copy Link'}

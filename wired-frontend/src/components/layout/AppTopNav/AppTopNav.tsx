@@ -24,7 +24,7 @@ type AppTopNavProps = {
 export function AppTopNav({
   breadcrumb,
   onRenameBreadcrumb,
-  showAppLinks = true,
+  showAppLinks = false,
   showShareButton = true,
   onShareClick,
   shareDisabled = false,

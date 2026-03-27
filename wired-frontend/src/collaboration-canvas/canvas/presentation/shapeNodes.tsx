@@ -101,6 +101,7 @@ export function CommittedShapeNode({
           y={s.y}
           width={s.width}
           height={s.height}
+          cornerRadius={s.cornerRadius ?? 0}
           stroke={s.stroke}
           strokeWidth={s.strokeWidth}
           fill={kf.fill}
@@ -480,7 +481,7 @@ export function CommittedShapeNode({
             fontStyle={s.fontStyle ?? 'normal'}
             align={s.align ?? 'left'}
             fill={s.textColor}
-            opacity={isEditing ? 0 : 1}
+            visible={!isEditing}
             listening={false}
           />
         </Group>
@@ -526,6 +527,26 @@ export function DraftShapeNode({ draft: d, stroke, stickyFill }: { draft: Draft;
         y={y}
         width={w}
         height={h}
+        stroke={stroke}
+        strokeWidth={2}
+        fill="transparent"
+        dash={dash}
+        listening={false}
+      />
+    );
+  }
+  if (d.kind === 'roundRect') {
+    const x = Math.min(d.x1, d.x2);
+    const y = Math.min(d.y1, d.y2);
+    const w = Math.abs(d.x2 - d.x1);
+    const h = Math.abs(d.y2 - d.y1);
+    return (
+      <Rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        cornerRadius={8}
         stroke={stroke}
         strokeWidth={2}
         fill="transparent"

@@ -30,6 +30,8 @@ export default function CanvasScreenInner({
     presenceOverflow,
     handleRenameBreadcrumb,
     collaboration,
+    worldBoundsToFitOnce,
+    clearWorldBoundsToFitOnce,
   } = useCanvasScreenInnerUseCase({ documentId });
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -74,7 +76,12 @@ export default function CanvasScreenInner({
       {canEdit ? <FloatingToolbar variant="canvas" /> : null}
 
       <main className={`relative ml-0 mt-14 h-[calc(100dvh-3.5rem)] w-full overflow-hidden ${canEdit ? 'md:ml-20' : ''}`}>
-        <KonvaCanvas collaboration={collaboration} readOnly={!canEdit} />
+        <KonvaCanvas
+          collaboration={collaboration}
+          readOnly={!canEdit}
+          worldBoundsToFit={worldBoundsToFitOnce}
+          onWorldBoundsFitConsumed={clearWorldBoundsToFitOnce}
+        />
       </main>
 
       <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-white/85 p-1.5 shadow-lg backdrop-blur-xl dark:bg-slate-900/85">

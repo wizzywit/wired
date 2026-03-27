@@ -113,6 +113,7 @@ function shapeFromInnerMap(id: string, inner: Y.Map<unknown>): DrawShape | null 
         strokeWidth === undefined
       )
         return null;
+      const cornerRadius = readNum(inner, 'cornerRadius');
       return {
         id,
         kind: 'rect',
@@ -125,6 +126,7 @@ function shapeFromInnerMap(id: string, inner: Y.Map<unknown>): DrawShape | null 
         fill: readStr(inner, 'fill'),
         fillOpacity: readNum(inner, 'fillOpacity'),
         strokeDash: readStr(inner, 'strokeDash') as StrokeDashPreset | undefined,
+        ...(cornerRadius !== undefined ? { cornerRadius } : {}),
       };
     }
     case 'ellipse': {
@@ -335,6 +337,7 @@ export function writeShapeToRoot(root: ShapeRootMap, shape: DrawShape) {
       yStr(inner, 'fill', shape.fill);
       yNum(inner, 'fillOpacity', shape.fillOpacity);
       yStr(inner, 'strokeDash', shape.strokeDash);
+      yNum(inner, 'cornerRadius', shape.cornerRadius);
       break;
     case 'ellipse':
       yNum(inner, 'cx', shape.cx);

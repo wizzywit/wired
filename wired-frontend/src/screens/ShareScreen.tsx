@@ -1,5 +1,4 @@
 import { AppTopNav } from '../components/layout/AppTopNav/AppTopNav';
-import { FloatingToolbar } from '../components/layout/FloatingToolbar/FloatingToolbar';
 import { Icon } from '../components/common/Icon';
 
 export function ShareScreen() {
@@ -13,8 +12,6 @@ export function ShareScreen() {
       </div>
 
       <AppTopNav />
-
-      <FloatingToolbar />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-background/10 p-4 backdrop-blur-sm">
         <div className="glass-panel w-full max-w-lg overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.12)] dark:shadow-black/40">

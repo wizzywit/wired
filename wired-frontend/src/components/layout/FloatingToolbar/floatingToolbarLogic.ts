@@ -1,6 +1,9 @@
 import type { CanvasTool } from '../../../theme/canvasTypes';
 
-export type ShapeTool = Extract<CanvasTool, 'rect' | 'circle' | 'triangle' | 'kite' | 'line' | 'arrow'>;
+export type ShapeTool = Extract<
+  CanvasTool,
+  'rect' | 'roundRect' | 'circle' | 'triangle' | 'kite' | 'line' | 'arrow'
+>;
 
 export const SHAPE_OPTIONS: {
   tool: ShapeTool;
@@ -8,6 +11,7 @@ export const SHAPE_OPTIONS: {
   label: string;
 }[] = [
   { tool: 'rect', icon: 'crop_square', label: 'Rect' },
+  { tool: 'roundRect', icon: 'rounded_corner', label: 'Round' },
   { tool: 'circle', icon: 'circle', label: 'Circle' },
   { tool: 'triangle', icon: 'change_history', label: 'Triangle' },
   { tool: 'kite', icon: 'diamond', label: 'Kite' },

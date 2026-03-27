@@ -6,7 +6,7 @@ export const DOCUMENTS_QUERY_KEY = ['documents'] as const;
 
 export function useCreateDocumentMutation() {
   return useMutation({
-    mutationFn: (input?: { title?: string }) => createDocument(input),
+    mutationFn: (input?: { title?: string; initialYjsBase64?: string }) => createDocument(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     },

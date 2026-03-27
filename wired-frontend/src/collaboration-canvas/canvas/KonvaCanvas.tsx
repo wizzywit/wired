@@ -1,6 +1,7 @@
 import { Group, Layer, Rect, Stage, Transformer } from 'react-konva';
 import type { RemotePeerAwareness } from '../awarenessTypes';
 import { useKonvaCanvasController } from './useKonvaCanvasController';
+import type { WorldAxisBounds } from './utils';
 import {
   CanvasSelectionStyleBar,
   CanvasTextEditOverlay,
@@ -20,9 +21,13 @@ export type KonvaCanvasCollaborationProps = {
 export function KonvaCanvas({
   collaboration,
   readOnly = false,
+  worldBoundsToFit = null,
+  onWorldBoundsFitConsumed,
 }: {
   collaboration?: KonvaCanvasCollaborationProps | null;
   readOnly?: boolean;
+  worldBoundsToFit?: WorldAxisBounds | null;
+  onWorldBoundsFitConsumed?: () => void;
 } = {}) {
   const {
     containerRef,
@@ -60,8 +65,10 @@ export function KonvaCanvas({
           onPointerWorldMove: collaboration.onPointerWorldMove,
           onStageMouseLeaveExtra: collaboration.onStageMouseLeaveExtra,
           readOnly,
+          worldBoundsToFit,
+          onWorldBoundsFitConsumed,
         }
-      : { readOnly }
+      : { readOnly, worldBoundsToFit, onWorldBoundsFitConsumed }
   );
 
   return (

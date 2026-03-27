@@ -32,5 +32,10 @@ describe('getShapeButtonPresentation', () => {
       label: 'Arrow',
       active: true,
     });
+    expect(getShapeButtonPresentation('roundRect')).toEqual({
+      icon: 'rounded_corner',
+      label: 'Round',
+      active: true,
+    });
   });
 });

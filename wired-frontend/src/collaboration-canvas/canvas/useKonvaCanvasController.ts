@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Stage as KonvaStage } from 'konva/lib/Stage';
-import { createDotPattern, GRID_CELL } from './utils';
+import {
+  createDotPattern,
+  GRID_CELL,
+  unionBoundsForShapes,
+  viewportCenteredOnBoundsAtScale,
+  type WorldAxisBounds,
+} from './utils';
 import { getCanvasBoardColors } from './canvasBoardColors';
 import { useTheme } from '../../theme/ThemeContext';
 import { useCanvasStore } from './canvasStore';
@@ -15,6 +21,9 @@ export type KonvaCanvasControllerOptions = {
   onPointerWorldMove?: (pt: { x: number; y: number }) => void;
   onStageMouseLeaveExtra?: () => void;
   readOnly?: boolean;
+  /** One-shot: zoom/pan to frame these world bounds (e.g. after template seed). */
+  worldBoundsToFit?: WorldAxisBounds | null;
+  onWorldBoundsFitConsumed?: () => void;
 };
 
 export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
@@ -25,6 +34,22 @@ export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
     onPointerWorldMoveRef.current = opts?.onPointerWorldMove;
     onStageMouseLeaveExtraRef.current = opts?.onStageMouseLeaveExtra;
   }, [opts?.onPointerWorldMove, opts?.onStageMouseLeaveExtra]);
+
+  const onWorldBoundsFitConsumedRef = useRef(opts?.onWorldBoundsFitConsumed);
+  useEffect(() => {
+    onWorldBoundsFitConsumedRef.current = opts?.onWorldBoundsFitConsumed;
+  }, [opts?.onWorldBoundsFitConsumed]);
+
+  const worldBoundsToFit = opts?.worldBoundsToFit ?? null;
+  const boundsKey = useMemo(
+    () =>
+      worldBoundsToFit
+        ? `${worldBoundsToFit.minX},${worldBoundsToFit.minY},${worldBoundsToFit.maxX},${worldBoundsToFit.maxY}`
+        : null,
+    [worldBoundsToFit]
+  );
+  const focusConsumedRef = useRef(false);
+  const lastBoundsKeyRef = useRef<string | null>(null);
 
   const { theme } = useTheme();
   const readOnly = Boolean(opts?.readOnly);
@@ -73,11 +98,35 @@ export function useKonvaCanvasController(opts?: KonvaCanvasControllerOptions) {
     startPan,
     endPanOnLeave,
     zoomFromCenter,
-    resetView,
+    setViewport,
+    focusWorldBounds,
     zoomPercent,
     originX,
     originY,
   } = useCanvasViewport(containerRef, stageRef);
+
+  useLayoutEffect(() => {
+    if (!worldBoundsToFit || !boundsKey) {
+      focusConsumedRef.current = false;
+      lastBoundsKeyRef.current = null;
+      return;
+    }
+    if (lastBoundsKeyRef.current !== boundsKey) {
+      lastBoundsKeyRef.current = boundsKey;
+      focusConsumedRef.current = false;
+    }
+    if (size.w < 10 || size.h < 10) return;
+    focusWorldBounds(worldBoundsToFit);
+    if (size.w >= 120 && size.h >= 120 && !focusConsumedRef.current) {
+      focusConsumedRef.current = true;
+      onWorldBoundsFitConsumedRef.current?.();
+    }
+  }, [boundsKey, worldBoundsToFit, size.w, size.h, focusWorldBounds]);
+
+  const resetView = useCallback(() => {
+    const b = unionBoundsForShapes(shapes);
+    setViewport(viewportCenteredOnBoundsAtScale(b, 1));
+  }, [shapes, setViewport]);
 
   const colors = getCanvasBoardColors(theme);
 

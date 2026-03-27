@@ -6,6 +6,57 @@ export type Viewport = {
   offsetY: number;
 };
 
+/** Axis-aligned bounds in world space (same coordinates as `DrawShape`). */
+export type WorldAxisBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+/**
+ * Pans/zooms so `bounds` is centered in the stage and fits inside the viewport with screen padding.
+ * Matches `screenPointToWorld` / `originX` math in `useCanvasViewport`.
+ */
+export function viewportToFitWorldBounds(
+  width: number,
+  height: number,
+  bounds: WorldAxisBounds,
+  paddingPx: number
+): Viewport {
+  const bw = Math.max(1, bounds.maxX - bounds.minX);
+  const bh = Math.max(1, bounds.maxY - bounds.minY);
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = (bounds.minY + bounds.maxY) / 2;
+  const aw = Math.max(1, width - 2 * paddingPx);
+  const ah = Math.max(1, height - 2 * paddingPx);
+  const scale = clampScale(Math.min(aw / bw, ah / bh));
+  return {
+    scale,
+    offsetX: -cx * scale,
+    offsetY: -cy * scale,
+  };
+}
+
+/**
+ * Fixed zoom level with the center of `bounds` at the screen center (same offset math as fit-to-bounds).
+ * Use for "100%" reset so content stays centered when it does not sit at world origin.
+ * When `bounds` is null (empty canvas), centers on world (0, 0).
+ */
+export function viewportCenteredOnBoundsAtScale(bounds: WorldAxisBounds | null, scale: number): Viewport {
+  const s = clampScale(scale);
+  if (!bounds) {
+    return { scale: s, offsetX: 0, offsetY: 0 };
+  }
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = (bounds.minY + bounds.maxY) / 2;
+  return {
+    scale: s,
+    offsetX: -cx * s,
+    offsetY: -cy * s,
+  };
+}
+
 export function clampScale(scale: number): number {
   return Math.max(CANVAS_MIN_SCALE, Math.min(CANVAS_MAX_SCALE, scale));
 }

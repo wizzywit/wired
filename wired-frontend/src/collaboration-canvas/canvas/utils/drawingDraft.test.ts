@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_SHAPE_PX } from './canvasConfig';
+import { DEFAULT_ROUND_RECT_CORNER_RADIUS, MIN_SHAPE_PX } from './canvasConfig';
 import { commitDraft, createDraftFromTool, mergeDraftWithPoint } from './drawingDraft';
 
 describe('createDraftFromTool', () => {
@@ -20,6 +20,10 @@ describe('createDraftFromTool', () => {
   it('maps triangle and kite tools to box drafts', () => {
     expect(createDraftFromTool('triangle', { x: 1, y: 2 })?.kind).toBe('triangle');
     expect(createDraftFromTool('kite', { x: 1, y: 2 })?.kind).toBe('kite');
+  });
+
+  it('maps roundRect tool to roundRect draft', () => {
+    expect(createDraftFromTool('roundRect', { x: 1, y: 2 })?.kind).toBe('roundRect');
   });
 });
 
@@ -89,6 +93,30 @@ describe('commitDraft', () => {
       expect(shape.height).toBe(10);
       expect(shape.fill).toBe('#2962ff');
       expect(shape.fillOpacity).toBe(0.15);
+      expect(shape.cornerRadius).toBeUndefined();
+    }
+  });
+
+  it('commits roundRect draft with corner radius', () => {
+    const d = {
+      kind: 'roundRect' as const,
+      x1: 0,
+      y1: 0,
+      x2: 20,
+      y2: 20,
+    };
+    const shape = commitDraft(d, {
+      stroke: '#2962ff',
+      newId: ids(),
+      minShapePx: MIN_SHAPE_PX,
+      stickyFill: '#fef08a',
+      stickyTextColor: '#422006',
+      shapeFill: '#2962ff',
+      shapeFillOpacity: 0.15,
+    });
+    expect(shape?.kind).toBe('rect');
+    if (shape?.kind === 'rect') {
+      expect(shape.cornerRadius).toBe(DEFAULT_ROUND_RECT_CORNER_RADIUS);
     }
   });
 

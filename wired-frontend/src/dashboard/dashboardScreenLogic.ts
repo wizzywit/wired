@@ -4,6 +4,9 @@ export const DASHBOARD_LOGIN_NEXT_ENCODED = encodeURIComponent('/dashboard');
 export type DashboardViewState = 'loading' | 'ready';
 export type DashboardDocumentsViewMode = 'grid' | 'list';
 
+/** Left-rail workspace navigation (dashboard shell). */
+export type DashboardWorkspaceSection = 'home' | 'templates' | 'team' | 'trash';
+
 export function resolveDashboardViewState(input: {
   mePending: boolean;
   meError: boolean;

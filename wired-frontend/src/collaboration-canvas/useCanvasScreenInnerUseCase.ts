@@ -1,14 +1,21 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCanvasStore } from './canvas';
 import { useUpdateDocumentMutation } from './useDocument';
 import { useMeQuery } from '../hooks';
 import { useCollaboration } from './useCollaboration';
 import { useCanvasPresenceUsers } from './useCanvasPresenceUsers';
+import { getTemplateShapes } from '../templates/getTemplateShapes';
+import { unionBoundsForShapes } from './canvas/utils/shapeWorldBounds';
+import type { WorldAxisBounds } from './canvas/utils/viewport';
 
 export function useCanvasScreenInnerUseCase({ documentId }: { documentId: string }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const templateParam = searchParams.get('template');
+  const templateSeedDoneRef = useRef(false);
+  const [worldBoundsToFitOnce, setWorldBoundsToFitOnce] = useState<WorldAxisBounds | null>(null);
   const replaceShapes = useCanvasStore((state) => state.replaceShapes);
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
@@ -63,6 +70,56 @@ export function useCanvasScreenInnerUseCase({ documentId }: { documentId: string
   }, [documentId, replaceShapes]);
 
   useEffect(() => {
+    templateSeedDoneRef.current = false;
+  }, [documentId]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setWorldBoundsToFitOnce(null);
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [documentId]);
+
+  const clearWorldBoundsToFitOnce = useCallback(() => {
+    setWorldBoundsToFitOnce(null);
+  }, []);
+
+  // useLayoutEffect so template shapes are applied before useCollaboration's useEffect([shapes])
+  // runs syncShapesToYMap (and emits to the server). useEffect would run after that pass and
+  // caused empty→Y sync to race with template seed, especially visible on text nodes.
+  useLayoutEffect(() => {
+    if (!isSynced || !templateParam) return;
+    if (templateSeedDoneRef.current) return;
+    if (shapes.length > 0) {
+      navigate(
+        { pathname: location.pathname, search: new URLSearchParams({ document: documentId }).toString() },
+        { replace: true }
+      );
+      return;
+    }
+    const seeded = getTemplateShapes(templateParam);
+    if (!seeded?.length) {
+      navigate(
+        { pathname: location.pathname, search: new URLSearchParams({ document: documentId }).toString() },
+        { replace: true }
+      );
+      return;
+    }
+    templateSeedDoneRef.current = true;
+    replaceShapes(seeded);
+    const framed = unionBoundsForShapes(seeded);
+    if (framed) {
+      window.queueMicrotask(() => {
+        setWorldBoundsToFitOnce(framed);
+      });
+    }
+    navigate(
+      { pathname: location.pathname, search: new URLSearchParams({ document: documentId }).toString() },
+      { replace: true }
+    );
+  }, [documentId, isSynced, location.pathname, navigate, replaceShapes, shapes.length, templateParam]);
+
+  useEffect(() => {
     if (!isSynced) return;
     emitSelectionTool(selectedId ?? null, tool);
   }, [emitSelectionTool, isSynced, selectedId, tool]);
@@ -97,5 +154,7 @@ export function useCanvasScreenInnerUseCase({ documentId }: { documentId: string
     presenceOverflow,
     handleRenameBreadcrumb,
     collaboration,
+    worldBoundsToFitOnce,
+    clearWorldBoundsToFitOnce,
   };
 }

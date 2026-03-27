@@ -5,6 +5,7 @@ export type CanvasTool =
   | 'select'
   | 'pen'
   | 'rect'
+  | 'roundRect'
   | 'circle'
   | 'triangle'
   | 'kite'
@@ -43,6 +44,8 @@ export type DrawShape =
       /** 0–1; fill alpha without changing stroke */
       fillOpacity?: number;
       strokeDash?: StrokeDashPreset;
+      /** Konva corner radius (0 = sharp) */
+      cornerRadius?: number;
     }
   | {
       id: string;

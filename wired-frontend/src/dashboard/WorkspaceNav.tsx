@@ -1,29 +1,44 @@
 import { Icon } from '../components/common/Icon';
+import type { DashboardWorkspaceSection } from './dashboardScreenLogic';
 
-export default function WorkspaceNav({ className = '' }: { className?: string }) {
+const NAV_ITEMS: { id: DashboardWorkspaceSection; label: string; icon: string; filled?: boolean }[] = [
+  { id: 'home', label: 'Home', icon: 'home', filled: true },
+  { id: 'templates', label: 'Templates', icon: 'dashboard_customize' },
+  { id: 'team', label: 'Team Boards', icon: 'groups' },
+  { id: 'trash', label: 'Trash', icon: 'delete' },
+];
+
+export default function WorkspaceNav({
+  className = '',
+  activeSection,
+  onSelectSection,
+}: {
+  className?: string;
+  activeSection: DashboardWorkspaceSection;
+  onSelectSection: (section: DashboardWorkspaceSection) => void;
+}) {
   return (
     <nav className={`space-y-8 ${className}`}>
       <div className="space-y-2">
         <h2 className="mb-4 ml-4 text-xs font-bold uppercase tracking-widest text-outline">Workspace</h2>
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="flex items-center gap-3 rounded-xl bg-surface-container-highest px-4 py-3 font-bold text-primary transition-all"
-        >
-          <Icon name="home" filled />
-          Home
-        </a>
-        {['Templates', 'Team Boards', 'Trash'].map((label, i) => (
-          <a
-            key={label}
-            href="#"
-            onClick={(e) => e.preventDefault()}
-            className="group flex items-center gap-3 rounded-xl px-4 py-3 text-on-surface-variant transition-all hover:bg-surface-container-low"
-          >
-            <Icon name={['dashboard_customize', 'groups', 'delete'][i]} className="group-hover:text-primary" />
-            {label}
-          </a>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const active = activeSection === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onSelectSection(item.id)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
+                active
+                  ? 'bg-surface-container-highest font-bold text-primary'
+                  : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              <Icon name={item.icon} filled={Boolean(item.filled) && active} className={active ? '' : 'group-hover:text-primary'} />
+              {item.label}
+            </button>
+          );
+        })}
       </div>
       <div className="rounded-2xl bg-surface-container p-6">
         <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-outline">Storage</p>

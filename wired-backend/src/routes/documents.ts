@@ -23,6 +23,7 @@ import {
   type StoredDocument
 } from "../lib/documents.js";
 import { getCollaborationIo } from "../socket/runtime.js";
+import { persistInitialRoomYjsFromBase64 } from "../lib/yjsRooms.js";
 
 export const documentsRouter = Router();
 
@@ -63,7 +64,9 @@ documentsRouter.get("/", async (req, res) => {
 });
 
 const createSchema = z.object({
-  title: z.string().min(1).max(120).optional()
+  title: z.string().min(1).max(120).optional(),
+  /** Full Yjs document state (base64) so the room is seeded before the canvas loads */
+  initialYjsBase64: z.string().max(900_000).optional()
 });
 
 const patchSchema = z.object({
@@ -79,6 +82,13 @@ documentsRouter.post("/", async (req, res) => {
     return res.status(400).json({ error: "Invalid payload." });
   }
   const doc = await createDocument(req.session.user.id, payload.data.title);
+  if (payload.data.initialYjsBase64?.trim()) {
+    const seeded = await persistInitialRoomYjsFromBase64(doc.id, payload.data.initialYjsBase64.trim());
+    if (!seeded.ok) {
+      await deleteDocumentForOwner(doc.id, req.session.user.id);
+      return res.status(400).json({ error: seeded.error });
+    }
+  }
   return res.status(201).json({ document: publicDoc(doc) });
 });
 

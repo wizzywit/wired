@@ -32,3 +32,16 @@ export function yMapToShapes(ymap: ShapeRootMap): DrawShape[] {
 export function syncShapesToYMap(ymap: ShapeRootMap, shapes: DrawShape[]) {
   syncShapesToYRoot(ymap, shapes);
 }
+
+/**
+ * Encode a full Yjs document update for shapes only — used when creating a document
+ * so the server can persist room state before the canvas opens (no client-side template race).
+ */
+export function buildInitialYjsBase64FromShapes(shapes: DrawShape[]): string {
+  const ydoc = new Y.Doc();
+  const ymap = getShapesRoot(ydoc);
+  ydoc.transact(() => {
+    syncShapesToYMap(ymap, shapes);
+  });
+  return uint8ToBase64(Y.encodeStateAsUpdate(ydoc));
+}

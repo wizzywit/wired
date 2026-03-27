@@ -61,3 +61,23 @@ export function shapeWorldBoundsLoose(s: DrawShape): { x: number; y: number; wid
       return null;
   }
 }
+
+/** Union of loose bounds for all shapes (for framing / zoom-to-fit). */
+export function unionBoundsForShapes(
+  shapes: DrawShape[]
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const s of shapes) {
+    const b = shapeWorldBoundsLoose(s);
+    if (!b) continue;
+    minX = Math.min(minX, b.x);
+    minY = Math.min(minY, b.y);
+    maxX = Math.max(maxX, b.x + b.width);
+    maxY = Math.max(maxY, b.y + b.height);
+  }
+  if (!Number.isFinite(minX)) return null;
+  return { minX, minY, maxX, maxY };
+}

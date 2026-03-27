@@ -1,9 +1,10 @@
 import type { CanvasTool, DrawShape } from '../../../theme/canvasTypes';
-import { PEN_STROKE_WIDTH, STROKE_WIDTH } from './canvasConfig';
+import { DEFAULT_ROUND_RECT_CORNER_RADIUS, PEN_STROKE_WIDTH, STROKE_WIDTH } from './canvasConfig';
 
 export type Draft =
   | { kind: 'pen'; points: number[] }
   | { kind: 'rect'; x1: number; y1: number; x2: number; y2: number }
+  | { kind: 'roundRect'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'sticky'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'ellipse'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'triangle'; x1: number; y1: number; x2: number; y2: number }
@@ -18,6 +19,15 @@ export function createDraftFromTool(tool: CanvasTool, w: { x: number; y: number 
   if (tool === 'rect') {
     return {
       kind: 'rect',
+      x1: w.x,
+      y1: w.y,
+      x2: w.x,
+      y2: w.y,
+    };
+  }
+  if (tool === 'roundRect') {
+    return {
+      kind: 'roundRect',
       x1: w.x,
       y1: w.y,
       x2: w.x,
@@ -120,7 +130,7 @@ export function commitDraft(d: Draft, deps: CommitDeps): DrawShape | null {
       strokeWidth: PEN_STROKE_WIDTH,
     };
   }
-  if (d.kind === 'rect') {
+  if (d.kind === 'rect' || d.kind === 'roundRect') {
     const x = Math.min(d.x1, d.x2);
     const y = Math.min(d.y1, d.y2);
     const w = Math.abs(d.x2 - d.x1);
@@ -137,6 +147,7 @@ export function commitDraft(d: Draft, deps: CommitDeps): DrawShape | null {
       strokeWidth: sw,
       fill: shapeFill,
       fillOpacity: shapeFillOpacity,
+      ...(d.kind === 'roundRect' ? { cornerRadius: DEFAULT_ROUND_RECT_CORNER_RADIUS } : {}),
     };
   }
   if (d.kind === 'triangle' || d.kind === 'kite') {

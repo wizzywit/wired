@@ -16,3 +16,6 @@ export const STROKE_WIDTH_MAX = 24;
  * clearly above the Transformer (rotation handle + selection chrome).
  */
 export const TRANSFORMER_TOOLBAR_CLEARANCE_PX = 52;
+
+/** Default corner radius for `roundRect` tool commits and card-style rects */
+export const DEFAULT_ROUND_RECT_CORNER_RADIUS = 12;

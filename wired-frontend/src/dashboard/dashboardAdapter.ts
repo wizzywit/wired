@@ -7,7 +7,7 @@ export async function listDocuments() {
   });
 }
 
-export async function createDocument(input?: { title?: string }) {
+export async function createDocument(input?: { title?: string; initialYjsBase64?: string }) {
   return apiRequest<{ document: WireDocument }>('/documents', {
     method: 'POST',
     body: JSON.stringify(input ?? {}),

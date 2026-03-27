@@ -1,13 +1,10 @@
 import { AppTopNav } from '../components/layout/AppTopNav/AppTopNav';
-import { FloatingToolbar } from '../components/layout/FloatingToolbar/FloatingToolbar';
 import { Icon } from '../components/common/Icon';
 
 export function ExportSettingsScreen() {
   return (
     <div className="overflow-hidden bg-surface font-body text-on-surface antialiased">
       <AppTopNav />
-
-      <FloatingToolbar />
 
       <main className="pointer-events-none fixed inset-0 flex items-center justify-center pt-14">
         <div className="h-full w-full bg-[radial-gradient(#e1e3e4_1px,transparent_1px)] [background-size:32px_32px] dark:bg-[radial-gradient(rgba(148,163,184,0.2)_1px,transparent_1px)]" />

@@ -111,6 +111,38 @@ export function applyIncomingClientUpdate(roomId: string, base64: string) {
   schedulePersist(roomId);
 }
 
+const MAX_INITIAL_YJS_BYTES = 512 * 1024;
+
+/**
+ * Persist an encoded Yjs state for a new document room before any client connects.
+ * Validates by applying into a fresh doc; rejects oversized or corrupt payloads.
+ */
+export async function persistInitialRoomYjsFromBase64(
+  roomId: string,
+  base64: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  let buf: Buffer;
+  try {
+    buf = Buffer.from(base64, "base64");
+  } catch {
+    return { ok: false, error: "invalid base64" };
+  }
+  if (buf.length > MAX_INITIAL_YJS_BYTES) {
+    return { ok: false, error: "payload too large" };
+  }
+  const doc = new Y.Doc();
+  try {
+    Y.applyUpdate(doc, buf, "initial-seed");
+  } catch {
+    return { ok: false, error: "invalid yjs update" };
+  }
+  const reencoded = Y.encodeStateAsUpdate(doc);
+  await redis.set(roomYjsKey(roomId), Buffer.from(reencoded).toString("base64"), {
+    EX: env.ROOM_STATE_TTL_SECONDS
+  });
+  return { ok: true };
+}
+
 /**
  * When the last socket leaves a room, flush Yjs to Redis and drop the in-memory doc
  * so memory does not grow with abandoned rooms.

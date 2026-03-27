@@ -7,9 +7,11 @@ import {
   clientToWorldFromStage,
   isTypingTarget,
   screenPointToWorld,
+  viewportToFitWorldBounds,
   zoomAtCenter,
   zoomWheelAtPointer,
   type Viewport,
+  type WorldAxisBounds,
 } from './utils';
 
 type PanRef = {
@@ -138,9 +140,12 @@ export function useCanvasViewport(
     [size.w, size.h]
   );
 
-  const resetView = useCallback(() => {
-    setViewport({ scale: 1, offsetX: 0, offsetY: 0 });
-  }, []);
+  const focusWorldBounds = useCallback(
+    (bounds: WorldAxisBounds, paddingPx = 48) => {
+      setViewport(viewportToFitWorldBounds(size.w, size.h, bounds, paddingPx));
+    },
+    [size.w, size.h]
+  );
 
   const zoomPercent = Math.round(viewport.scale * 100);
 
@@ -160,7 +165,8 @@ export function useCanvasViewport(
     startPan,
     endPanOnLeave,
     zoomFromCenter,
-    resetView,
+    setViewport,
+    focusWorldBounds,
     zoomPercent,
     originX,
     originY,

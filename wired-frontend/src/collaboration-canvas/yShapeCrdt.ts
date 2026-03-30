@@ -408,11 +408,11 @@ export function writeShapeToRoot(root: ShapeRootMap, shape: DrawShape) {
 
 export function yRootMapToShapes(root: ShapeRootMap): DrawShape[] {
   const list: DrawShape[] = [];
+  /** Y.Map iteration follows insertion order; Konva draws later siblings on top — do not sort by id. */
   root.forEach((val, id) => {
     const shape = readShapeEntry(id, val);
     if (shape) list.push(shape);
   });
-  list.sort((a, b) => a.id.localeCompare(b.id));
   return list;
 }
 

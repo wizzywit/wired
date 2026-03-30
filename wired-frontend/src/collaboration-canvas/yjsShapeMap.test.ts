@@ -16,7 +16,7 @@ describe('buildInitialYjsBase64FromShapes', () => {
     const doc = new Y.Doc();
     Y.applyUpdate(doc, base64ToUint8(b64));
     const out = yMapToShapes(getShapesRoot(doc));
-    expect(out.map((s) => s.id).sort()).toEqual(shapes!.map((s) => s.id).sort());
+    expect(out.map((s) => s.id)).toEqual(shapes!.map((s) => s.id));
     expect(out.length).toBe(shapes!.length);
   });
 });

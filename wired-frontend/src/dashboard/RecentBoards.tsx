@@ -5,6 +5,8 @@ import { formatDocumentEditedLabel } from './dashboardScreenLogic';
 
 export default function RecentBoards({
   className = '',
+  sectionTitle = 'Your documents',
+  emptyMessage = 'No documents yet. Use Create New above to start a collaborative canvas.',
   documents,
   isLoading,
   isDeleting,
@@ -16,6 +18,10 @@ export default function RecentBoards({
   nowMs,
 }: {
   className?: string;
+  /** Section heading (e.g. Team Boards vs Your documents). */
+  sectionTitle?: string;
+  /** Shown when the list is empty and not loading. */
+  emptyMessage?: string;
   documents: WireDocument[];
   isLoading: boolean;
   isDeleting: boolean;
@@ -29,7 +35,7 @@ export default function RecentBoards({
   return (
     <div className={className}>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-outline">Your documents</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-outline">{sectionTitle}</h2>
         <div className="flex gap-2">
           <button
             type="button"
@@ -60,9 +66,7 @@ export default function RecentBoards({
       {isLoading ? (
         <p className="text-sm text-on-surface-variant">Loading documents…</p>
       ) : documents.length === 0 ? (
-        <p className="text-sm text-on-surface-variant">
-          No documents yet. Use Create New above to start a collaborative canvas.
-        </p>
+        <p className="text-sm text-on-surface-variant">{emptyMessage}</p>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {documents.map((r) => {

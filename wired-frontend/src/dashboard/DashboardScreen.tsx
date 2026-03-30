@@ -10,6 +10,7 @@ import WorkspaceNav from './WorkspaceNav';
 import { useNowMs } from '../hooks';
 import { formatDocumentEditedLabel, type DashboardWorkspaceSection } from './dashboardScreenLogic';
 import { useDashboardScreenUseCase } from './useDashboardScreenUseCase';
+import type { WireDocument } from '../domain-types';
 
 export default function DashboardScreen() {
   const [searchParams] = useSearchParams();
@@ -17,7 +18,8 @@ export default function DashboardScreen() {
   const nowMs = useNowMs();
   const {
     viewState,
-    documents,
+    ownedDocuments,
+    teamBoardsDocuments,
     docsQueryPending,
     createPending,
     deletePending,
@@ -31,7 +33,7 @@ export default function DashboardScreen() {
     documentsViewMode,
     setDocumentsViewMode,
   } = useDashboardScreenUseCase();
-  const canDeleteDocument = (doc: (typeof documents)[number]) => doc.canDelete ?? doc.ownerId === currentUserId;
+  const canDeleteDocument = (doc: WireDocument) => doc.canDelete ?? doc.ownerId === currentUserId;
 
   if (viewState === 'loading') {
     return (
@@ -67,7 +69,7 @@ export default function DashboardScreen() {
             </div>
           </div>
 
-          {workspaceSection === 'home' ? (
+          {workspaceSection === 'home' || workspaceSection === 'team' ? (
             <TemplateStrip
               onCreateNew={handleCreate}
               createPending={createPending}
@@ -84,7 +86,7 @@ export default function DashboardScreen() {
             <div className="lg:col-span-9">
               {workspaceSection === 'home' ? (
                 <RecentBoards
-                  documents={documents}
+                  documents={ownedDocuments}
                   isLoading={docsQueryPending}
                   isDeleting={deletePending}
                   onOpen={openDocument}
@@ -103,11 +105,19 @@ export default function DashboardScreen() {
                 />
               ) : null}
               {workspaceSection === 'team' ? (
-                <div className="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-8 dark:bg-surface-container">
-                  <p className="text-sm text-on-surface-variant">
-                    Team boards are not available yet. Switch back to Home to open your documents.
-                  </p>
-                </div>
+                <RecentBoards
+                  sectionTitle="Team boards"
+                  emptyMessage="No team boards yet. When someone shares a board with you, it will show up here."
+                  documents={teamBoardsDocuments}
+                  isLoading={docsQueryPending}
+                  isDeleting={deletePending}
+                  onOpen={openDocument}
+                  onDelete={requestDeleteDocument}
+                  canDeleteDocument={canDeleteDocument}
+                  viewMode={documentsViewMode}
+                  onChangeViewMode={setDocumentsViewMode}
+                  nowMs={nowMs}
+                />
               ) : null}
               {workspaceSection === 'trash' ? (
                 <div className="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-8 dark:bg-surface-container">
@@ -119,36 +129,20 @@ export default function DashboardScreen() {
         </header>
       </main>
 
-      {/* Mobile main */}
+      {/* Mobile main: home + team share template starter; templates/trash use back navigation only */}
       <main className="mt-20 space-y-8 px-6 md:hidden">
-        {workspaceSection !== 'home' ? (
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setWorkspaceSection('home')}
-              className="flex items-center gap-2 text-sm font-semibold text-primary"
-            >
-              <Icon name="arrow_back" size="sm" />
-              Back
-            </button>
-            {workspaceSection === 'templates' ? (
-              <TemplateStrip
-                onCreateNew={handleCreate}
-                createPending={createPending}
-                onBrowseLibrary={() => setWorkspaceSection('templates')}
-              />
-            ) : null}
-            {workspaceSection === 'team' ? (
-              <p className="text-sm text-on-surface-variant">Team boards are coming soon.</p>
-            ) : null}
-            {workspaceSection === 'trash' ? (
-              <p className="text-sm text-on-surface-variant">Trash is coming soon.</p>
-            ) : null}
-          </div>
-        ) : null}
-
-        {workspaceSection === 'home' ? (
+        {workspaceSection === 'home' || workspaceSection === 'team' ? (
           <>
+            {workspaceSection === 'team' ? (
+              <button
+                type="button"
+                onClick={() => setWorkspaceSection('home')}
+                className="flex items-center gap-2 text-sm font-semibold text-primary"
+              >
+                <Icon name="arrow_back" size="sm" />
+                Back
+              </button>
+            ) : null}
             <SearchField placeholder="Search boards, templates, or teams..." />
             <section className="space-y-4">
               <div className="flex items-end justify-between">
@@ -179,14 +173,58 @@ export default function DashboardScreen() {
               </div>
             </section>
             <section className="space-y-4">
-              <h2 className="text-sm font-bold uppercase tracking-tight text-on-surface opacity-60">Your documents</h2>
+              <h2 className="text-sm font-bold uppercase tracking-tight text-on-surface opacity-60">
+                {workspaceSection === 'home' ? 'Your documents' : 'Team boards'}
+              </h2>
               <div className="space-y-3">
                 {docsQueryPending ? (
                   <p className="text-sm text-on-surface-variant">Loading documents…</p>
-                ) : documents.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant">No documents yet. Tap Create New to start.</p>
+                ) : workspaceSection === 'home' ? (
+                  ownedDocuments.length === 0 ? (
+                    <p className="text-sm text-on-surface-variant">No documents yet. Tap Create New to start.</p>
+                  ) : (
+                    ownedDocuments.map((r) => (
+                      <article
+                        key={r.id}
+                        className="flex w-full cursor-pointer items-center gap-4 rounded-xl bg-surface-container-lowest p-3 text-left shadow-sm transition-all active:scale-[0.98] dark:bg-surface-container"
+                      >
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
+                          <div className="absolute inset-0 p-2 opacity-50">
+                            <div className="mb-1 h-2 w-full rounded-full bg-primary/20" />
+                            <div className="h-2 w-2/3 rounded-full bg-primary/20" />
+                          </div>
+                        </div>
+                        <button type="button" onClick={() => openDocument(r.id)} className="min-w-0 flex-grow text-left">
+                          <h3 className="truncate text-sm font-bold text-on-surface">{r.title}</h3>
+                          <p className="mt-0.5 text-[11px] font-medium text-on-surface-variant">
+                            {formatDocumentEditedLabel(r.updatedAt, nowMs)}
+                          </p>
+                        </button>
+                        <div className="flex items-center gap-1">
+                          <span className="p-2 text-slate-400" aria-hidden>
+                            <Icon name="chevron_right" size="sm" />
+                          </span>
+                          {canDeleteDocument(r) ? (
+                            <button
+                              type="button"
+                              disabled={deletePending}
+                              onClick={() => requestDeleteDocument(r.id)}
+                              className="rounded-md p-2 text-slate-400 transition-colors enabled:hover:text-red-600 disabled:opacity-40"
+                              aria-label={`Delete ${r.title}`}
+                            >
+                              <Icon name="delete" size="sm" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </article>
+                    ))
+                  )
+                ) : teamBoardsDocuments.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">
+                    No team boards yet. When someone shares a board with you, it will show up here.
+                  </p>
                 ) : (
-                  documents.map((r) => (
+                  teamBoardsDocuments.map((r) => (
                     <article
                       key={r.id}
                       className="flex w-full cursor-pointer items-center gap-4 rounded-xl bg-surface-container-lowest p-3 text-left shadow-sm transition-all active:scale-[0.98] dark:bg-surface-container"
@@ -226,9 +264,32 @@ export default function DashboardScreen() {
             </section>
           </>
         ) : null}
+
+        {workspaceSection === 'templates' || workspaceSection === 'trash' ? (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setWorkspaceSection('home')}
+              className="flex items-center gap-2 text-sm font-semibold text-primary"
+            >
+              <Icon name="arrow_back" size="sm" />
+              Back
+            </button>
+            {workspaceSection === 'templates' ? (
+              <TemplateStrip
+                onCreateNew={handleCreate}
+                createPending={createPending}
+                onBrowseLibrary={() => setWorkspaceSection('templates')}
+              />
+            ) : null}
+            {workspaceSection === 'trash' ? (
+              <p className="text-sm text-on-surface-variant">Trash is coming soon.</p>
+            ) : null}
+          </div>
+        ) : null}
       </main>
 
-      <MobileBottomNav />
+      <MobileBottomNav activeSection={workspaceSection} onSelectSection={setWorkspaceSection} />
 
       <button
         type="button"

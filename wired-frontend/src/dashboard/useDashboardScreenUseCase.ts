@@ -43,6 +43,16 @@ export function useDashboardScreenUseCase() {
     [navigate]
   );
   const documents: WireDocument[] = useMemo(() => docsQuery.data ?? [], [docsQuery.data]);
+  const ownedDocuments = useMemo(
+    () =>
+      currentUserId ? documents.filter((d) => d.ownerId === currentUserId) : [],
+    [currentUserId, documents]
+  );
+  const teamBoardsDocuments = useMemo(
+    () =>
+      currentUserId ? documents.filter((d) => d.ownerId !== currentUserId) : [],
+    [currentUserId, documents]
+  );
 
   const requestDeleteDocument = useCallback(
     (id: string) => {
@@ -87,6 +97,8 @@ export function useDashboardScreenUseCase() {
   return {
     viewState,
     documents,
+    ownedDocuments,
+    teamBoardsDocuments,
     docsQueryPending: docsQuery.isPending,
     createPending: createMutation.isPending,
     deletePending: deleteMutation.isPending,

@@ -6,6 +6,7 @@ import { Icon } from '../components/common/Icon';
 import { presenceGlowStyle } from './canvasScreenLogic';
 import { useCanvasScreenInnerUseCase } from './useCanvasScreenInnerUseCase';
 import { ShareDialog } from '../share';
+import { useLogoutMutation } from '../components/layout/AppTopNav/useLogoutMutation';
 
 export default function CanvasScreenInner({
   documentId,
@@ -34,6 +35,7 @@ export default function CanvasScreenInner({
     clearWorldBoundsToFitOnce,
   } = useCanvasScreenInnerUseCase({ documentId });
   const [shareOpen, setShareOpen] = useState(false);
+  const logoutMutation = useLogoutMutation();
 
   return (
     <div className="h-dvh overflow-hidden bg-background font-body text-on-background">
@@ -41,6 +43,9 @@ export default function CanvasScreenInner({
         breadcrumb={documentTitle}
         onRenameBreadcrumb={localUserId === documentOwnerId ? handleRenameBreadcrumb : undefined}
         onShareClick={() => setShareOpen(true)}
+        showLogout
+        onLogout={() => logoutMutation.mutate()}
+        logoutPending={logoutMutation.isPending}
         presence={
           <div className="mr-2 hidden items-center sm:flex" title={isSynced ? `${usersOnline} online` : 'Connecting…'}>
             <div className="-space-x-2 flex">

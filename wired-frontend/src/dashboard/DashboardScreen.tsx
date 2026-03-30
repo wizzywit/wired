@@ -11,6 +11,7 @@ import { useNowMs } from '../hooks';
 import { formatDocumentEditedLabel, type DashboardWorkspaceSection } from './dashboardScreenLogic';
 import { useDashboardScreenUseCase } from './useDashboardScreenUseCase';
 import type { WireDocument } from '../domain-types';
+import { useLogoutMutation } from '../components/layout/AppTopNav/useLogoutMutation';
 
 export default function DashboardScreen() {
   const [searchParams] = useSearchParams();
@@ -33,6 +34,7 @@ export default function DashboardScreen() {
     documentsViewMode,
     setDocumentsViewMode,
   } = useDashboardScreenUseCase();
+  const logoutMutation = useLogoutMutation();
   const canDeleteDocument = (doc: WireDocument) => doc.canDelete ?? doc.ownerId === currentUserId;
 
   if (viewState === 'loading') {
@@ -44,8 +46,13 @@ export default function DashboardScreen() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-32 md:pb-12">
-      <AppTopNav showShareButton={false} />
+    <div className="min-h-dvh bg-background pb-44 md:pb-12">
+      <AppTopNav
+        showShareButton={false}
+        showLogout
+        onLogout={() => logoutMutation.mutate()}
+        logoutPending={logoutMutation.isPending}
+      />
       {searchParams.get('notice') === 'document-unavailable' ? (
         <div className="mx-auto mt-16 w-full max-w-7xl px-6 md:px-8">
           <div className="rounded-xl border border-amber-400/30 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-100">
@@ -289,7 +296,12 @@ export default function DashboardScreen() {
         ) : null}
       </main>
 
-      <MobileBottomNav activeSection={workspaceSection} onSelectSection={setWorkspaceSection} />
+      <MobileBottomNav
+        activeSection={workspaceSection}
+        onSelectSection={setWorkspaceSection}
+        onLogout={() => logoutMutation.mutate()}
+        logoutPending={logoutMutation.isPending}
+      />
 
       <button
         type="button"

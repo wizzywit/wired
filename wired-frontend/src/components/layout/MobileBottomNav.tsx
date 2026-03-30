@@ -4,9 +4,14 @@ import type { DashboardWorkspaceSection } from '../../dashboard/dashboardScreenL
 export function MobileBottomNav({
   activeSection,
   onSelectSection,
+  onLogout,
+  logoutPending = false,
 }: {
   activeSection: DashboardWorkspaceSection;
   onSelectSection: (section: DashboardWorkspaceSection) => void;
+  /** Dashboard: sign out without leaving the shell layout. */
+  onLogout?: () => void;
+  logoutPending?: boolean;
 }) {
   const tabClass = (section: DashboardWorkspaceSection) =>
     `flex flex-col items-center justify-center rounded-2xl px-4 py-1.5 transition-transform duration-150 active:scale-90 ${
@@ -23,19 +28,33 @@ export function MobileBottomNav({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-3xl border-t border-slate-100/10 bg-white/85 px-4 pb-6 pt-3 shadow-bottomNav backdrop-blur-xl dark:border-slate-800/50 dark:bg-slate-900/90 md:hidden">
-      {items.map(({ section, label, icon, homeFilled }) => (
+    <nav className="fixed bottom-0 left-0 z-50 flex w-full flex-col rounded-t-3xl border-t border-slate-100/10 bg-white/85 px-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 shadow-bottomNav backdrop-blur-xl dark:border-slate-800/50 dark:bg-slate-900/90 md:hidden">
+      <div className="flex w-full items-center justify-around px-2">
+        {items.map(({ section, label, icon, homeFilled }) => (
+          <button
+            key={section}
+            type="button"
+            onClick={() => onSelectSection(section)}
+            className={tabClass(section)}
+            aria-current={activeSection === section ? 'page' : undefined}
+          >
+            <Icon name={icon} size="sm" filled={Boolean(homeFilled) && activeSection === 'home'} />
+            <span className="mt-1 font-sans text-[11px] font-medium uppercase tracking-wider">{label}</span>
+          </button>
+        ))}
+      </div>
+      {onLogout ? (
         <button
-          key={section}
           type="button"
-          onClick={() => onSelectSection(section)}
-          className={tabClass(section)}
-          aria-current={activeSection === section ? 'page' : undefined}
+          onClick={onLogout}
+          disabled={logoutPending}
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 py-2.5 text-sm font-semibold text-slate-600 transition-colors enabled:active:scale-[0.98] enabled:hover:bg-slate-100/80 disabled:opacity-50 dark:border-slate-600/50 dark:text-slate-300 dark:enabled:hover:bg-slate-800/80"
+          aria-label={logoutPending ? 'Signing out…' : 'Log out'}
         >
-          <Icon name={icon} size="sm" filled={Boolean(homeFilled) && activeSection === 'home'} />
-          <span className="mt-1 font-sans text-[11px] font-medium uppercase tracking-wider">{label}</span>
+          <Icon name="logout" size="sm" />
+          {logoutPending ? 'Signing out…' : 'Log out'}
         </button>
-      ))}
+      ) : null}
     </nav>
   );
 }

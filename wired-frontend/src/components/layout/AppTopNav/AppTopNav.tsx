@@ -19,6 +19,10 @@ type AppTopNavProps = {
   onShareClick?: () => void;
   shareDisabled?: boolean;
   variant?: 'default' | 'compact';
+  /** Show log out control (pass with `onLogout`). */
+  showLogout?: boolean;
+  onLogout?: () => void;
+  logoutPending?: boolean;
 };
 
 export function AppTopNav({
@@ -31,6 +35,9 @@ export function AppTopNav({
   trailing,
   presence,
   variant = 'default',
+  showLogout = false,
+  onLogout,
+  logoutPending = false,
 }: AppTopNavProps) {
   const { theme, toggleTheme } = useTheme();
   const { editing, draft, saving, inputRef, setDraft, startEdit, commitEdit, onInputKeyDown, onDisplayKeyDown } =
@@ -125,6 +132,17 @@ export function AppTopNav({
             <Icon name="notifications" size="sm" />
           </button>
           {trailing}
+          {showLogout && onLogout ? (
+            <button
+              type="button"
+              onClick={onLogout}
+              disabled={logoutPending}
+              className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100/50 enabled:hover:text-red-600 dark:hover:bg-slate-800/50 dark:enabled:hover:text-red-400"
+              aria-label={logoutPending ? 'Signing out…' : 'Log out'}
+            >
+              <Icon name="logout" size="sm" />
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={toggleTheme}
